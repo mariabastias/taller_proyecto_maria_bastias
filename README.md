@@ -23,7 +23,7 @@ Chile genera más de 572,000 toneladas de residuos textiles anuales. Este sistem
 
 El desarrollo sigue una metodología ágil con **tablero Kanban** para gestión visual de tareas:
 
-[**🔗 Ver Tablero Kanban del Proyecto**](https://github.com/mariabastias/taller_proyecto_maria_bastias/projects/1)
+[**🔗 Ver Tablero Kanban del Proyecto**](https://github.com/users/mariabastias/projects/1/views/1)
 
 
 ## Estructura del Proyecto
