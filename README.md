@@ -32,4 +32,5 @@ Este proyecto está bajo la Licencia MIT - ver archivo [LICENSE](LICENSE) para d
 María Constanza Bastías Sanhueza - Taller de Proyecto AIEP 2025
 
 ## Informe del Avance 1
-[Descargar PDF](documentos/avance1_maria_bastias.pdf)
+[Descargar desde Google Drive](https://drive.google.com/file/d/1jO-GDikkHLFxWWQA6gMMDNr2hmXUfn9R/view?usp=sharing)
+*Nota: El PDF está alojado en Google Drive para garantizar su correcta visualización*
