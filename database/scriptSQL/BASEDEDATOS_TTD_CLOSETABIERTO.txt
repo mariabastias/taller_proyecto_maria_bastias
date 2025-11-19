@@ -1,0 +1,377 @@
+-- =============================================
+-- BASE DE DATOS: TRUEQUE TEXTIL DIGITAL
+-- AUTORA: María Constanza Bastías Sanhueza
+-- FECHA: Noviembre 2025
+-- INSTITUCIÓN: AIEP
+-- =============================================
+
+
+CREATE DATABASE TruequeTextilDigital;
+GO
+
+USE TruequeTextilDigital;
+GO
+
+-- =============================
+-- TABLAS MAESTRAS Y CATÁLOGOS 
+-- =============================
+
+CREATE TABLE Region (
+    region_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_region VARCHAR(100) NOT NULL UNIQUE,
+    codigo_region VARCHAR(10) NOT NULL UNIQUE
+);
+
+CREATE TABLE Comuna (
+    comuna_id INT IDENTITY(1,1) PRIMARY KEY,
+    region_id INT NOT NULL,
+    nombre_comuna VARCHAR(100) NOT NULL UNIQUE,
+    codigo_comuna VARCHAR(10) NOT NULL UNIQUE,
+    FOREIGN KEY (region_id) REFERENCES Region(region_id)
+);
+
+CREATE TABLE Genero (
+    genero_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_genero VARCHAR(20) NOT NULL UNIQUE
+);
+
+CREATE TABLE CategoriaPrenda (
+    categoria_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_categoria VARCHAR(100) NOT NULL UNIQUE
+);
+
+CREATE TABLE EstadoPrenda (
+    estado_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_estado VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE EstadoPublicacion (
+    estado_publicacion_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_estado VARCHAR(20) NOT NULL UNIQUE
+);
+
+CREATE TABLE EstadoPropuesta (
+    estado_propuesta_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_estado VARCHAR(20) NOT NULL UNIQUE
+);
+
+CREATE TABLE DimensionEvaluacion (
+    dimension_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_dimension VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(100),
+    peso DECIMAL(3,2) DEFAULT 1.00
+);
+
+CREATE TABLE TipoNotificacion (
+    tipo_notificacion_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_tipo VARCHAR(50) NOT NULL UNIQUE,
+    descripcion VARCHAR(100)
+);
+
+CREATE TABLE CategoriaReporte (
+    categoria_reporte_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_categoria VARCHAR(100) NOT NULL UNIQUE,
+    descripcion VARCHAR(100)
+);
+
+-- =====================
+-- TABLA DE USUARIOS
+-- =====================
+
+CREATE TABLE Usuario (
+    usuario_id INT IDENTITY(1,1) PRIMARY KEY,
+    correo_electronico VARCHAR(60) NOT NULL UNIQUE,
+    password_hash VARCHAR(20) NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    numero_telefono VARCHAR(20),
+    comuna_id INT NOT NULL,
+    url_foto_perfil VARCHAR(500),
+    biografia VARCHAR(250),
+    fecha_nacimiento DATE,
+    genero_id INT, 
+    preferencias_contacto VARCHAR(100),
+    reputacion_promedio DECIMAL(3,2) DEFAULT 0.00,
+    cuenta_verificada BIT DEFAULT 0,
+    fecha_verificacion DATETIME,
+    fecha_registro DATETIME DEFAULT GETDATE(),
+    fecha_ultimo_login DATETIME,
+    estado_usuario VARCHAR(20) DEFAULT 'activo',
+    rol VARCHAR(10) DEFAULT 'usuario',
+    FOREIGN KEY (comuna_id) REFERENCES Comuna(comuna_id),
+    FOREIGN KEY (genero_id) REFERENCES Genero(genero_id) 
+);
+
+-- ===============================
+-- TABLAS DE GESTIÓN DE PRENDAS
+-- ===============================
+
+CREATE TABLE Prenda (
+    prenda_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    titulo_publicacion VARCHAR(200) NOT NULL,
+    descripcion_publicacion VARCHAR(500),
+    categoria_id INT NOT NULL,
+    talla VARCHAR(10) NOT NULL,
+    estado_prenda_id INT NOT NULL,
+    estado_publicacion_id INT NOT NULL DEFAULT 1,
+    fecha_publicacion DATETIME DEFAULT GETDATE(),
+    fecha_actualizacion DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (categoria_id) REFERENCES CategoriaPrenda(categoria_id),
+    FOREIGN KEY (estado_prenda_id) REFERENCES EstadoPrenda(estado_id),
+    FOREIGN KEY (estado_publicacion_id) REFERENCES EstadoPublicacion(estado_publicacion_id)
+);
+
+CREATE TABLE Etiqueta (
+    etiqueta_id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre_etiqueta VARCHAR(20) NOT NULL UNIQUE
+);
+
+CREATE TABLE PrendaEtiqueta (
+    prenda_id INT NOT NULL,
+    etiqueta_id INT NOT NULL,
+    PRIMARY KEY (prenda_id, etiqueta_id),
+    FOREIGN KEY (prenda_id) REFERENCES Prenda(prenda_id) ON DELETE CASCADE,
+    FOREIGN KEY (etiqueta_id) REFERENCES Etiqueta(etiqueta_id)
+);
+
+CREATE TABLE ImagenPrenda (
+    imagen_id INT IDENTITY(1,1) PRIMARY KEY,
+    prenda_id INT NOT NULL,
+    imagen_url VARCHAR(500) NOT NULL,
+    orden INT DEFAULT 1,
+    es_principal BIT DEFAULT 0,
+    fecha_subida DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (prenda_id) REFERENCES Prenda(prenda_id) ON DELETE CASCADE
+);
+
+-- =========================
+-- SISTEMA DE TRUEQUES 
+-- =========================
+
+CREATE TABLE PropuestaTrueque (
+    propuesta_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_proponente_id INT NOT NULL,
+    mensaje_acompanante VARCHAR(100),
+    estado_propuesta_id INT NOT NULL DEFAULT 1,
+    prioridad INT DEFAULT 1,
+    es_contraoferta BIT DEFAULT 0,
+    fecha_propuesta DATETIME DEFAULT GETDATE(),
+    fecha_respuesta DATETIME,
+    fecha_expiracion DATETIME,
+    FOREIGN KEY (usuario_proponente_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (estado_propuesta_id) REFERENCES EstadoPropuesta(estado_propuesta_id)
+);
+
+CREATE TABLE DetallePropuesta (
+    detalle_id INT IDENTITY(1,1) PRIMARY KEY,
+    propuesta_id INT NOT NULL,
+    prenda_id INT NOT NULL,
+    tipo_participacion VARCHAR(20) NOT NULL CHECK (tipo_participacion IN ('solicitada', 'ofrecida')),
+    fecha_agregado DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (propuesta_id) REFERENCES PropuestaTrueque(propuesta_id) ON DELETE CASCADE,
+    FOREIGN KEY (prenda_id) REFERENCES Prenda(prenda_id),
+    UNIQUE(propuesta_id, prenda_id, tipo_participacion)
+);
+
+CREATE TABLE MensajeNegociacion (
+    mensaje_id INT IDENTITY(1,1) PRIMARY KEY,
+    propuesta_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    mensaje_texto VARCHAR(250) NOT NULL,
+    tipo_mensaje VARCHAR(20) DEFAULT 'texto',
+    fecha_envio DATETIME DEFAULT GETDATE(),
+    leido BIT DEFAULT 0,
+    FOREIGN KEY (propuesta_id) REFERENCES PropuestaTrueque(propuesta_id) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id)
+);
+
+-- =============================================
+-- SISTEMA DE REPUTACIÓN Y EVALUACIONES
+-- =============================================
+
+CREATE TABLE Evaluacion (
+    evaluacion_id INT IDENTITY(1,1) PRIMARY KEY,
+    propuesta_id INT NOT NULL,
+    usuario_evaluador_id INT NOT NULL,
+    usuario_evaluado_id INT NOT NULL,
+    calificacion_general INT NOT NULL CHECK (calificacion_general BETWEEN 1 AND 5),
+    comentario VARCHAR(250),
+    fecha_evaluacion DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (propuesta_id) REFERENCES PropuestaTrueque(propuesta_id),
+    FOREIGN KEY (usuario_evaluador_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (usuario_evaluado_id) REFERENCES Usuario(usuario_id)
+);
+
+CREATE TABLE EvaluacionDimension (
+    evaluacion_id INT NOT NULL,
+    dimension_id INT NOT NULL,
+    calificacion INT NOT NULL CHECK (calificacion BETWEEN 1 AND 5),
+    PRIMARY KEY (evaluacion_id, dimension_id),
+    FOREIGN KEY (evaluacion_id) REFERENCES Evaluacion(evaluacion_id) ON DELETE CASCADE,
+    FOREIGN KEY (dimension_id) REFERENCES DimensionEvaluacion(dimension_id)
+);
+
+CREATE TABLE HistorialReputacion (
+    historial_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    puntuacion_anterior DECIMAL(3,2),
+    puntuacion_nueva DECIMAL(3,2),
+    motivo_cambio VARCHAR(50),
+    fecha_cambio DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id)
+);
+
+-- =============================================
+-- SISTEMA DE SEGUIMIENTO Y PREFERENCIAS
+-- =============================================
+
+CREATE TABLE Favorito (
+    favorito_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    prenda_id INT NOT NULL,
+    fecha_agregado DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (prenda_id) REFERENCES Prenda(prenda_id),
+    UNIQUE(usuario_id, prenda_id)
+);
+
+CREATE TABLE BusquedaGuardada (
+    busqueda_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    nombre_busqueda VARCHAR(100),
+    criterios_busqueda VARCHAR(1000),
+    activa BIT DEFAULT 1,
+    fecha_creacion DATETIME DEFAULT GETDATE(),
+    fecha_ultima_notificacion DATETIME,
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id)
+);
+
+CREATE TABLE SeguimientoUsuario (
+    seguimiento_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_seguidor_id INT NOT NULL,
+    usuario_seguido_id INT NOT NULL,
+    fecha_seguimiento DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (usuario_seguidor_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (usuario_seguido_id) REFERENCES Usuario(usuario_id),
+    UNIQUE(usuario_seguidor_id, usuario_seguido_id)
+);
+
+-- =============================================
+-- SISTEMA DE NOTIFICACIONES
+-- =============================================
+
+CREATE TABLE Notificacion (
+    notificacion_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    tipo_notificacion_id INT NOT NULL,
+    titulo VARCHAR(200) NOT NULL,
+    mensaje VARCHAR(500) NOT NULL,
+    enlace VARCHAR(500),
+    leida BIT DEFAULT 0,
+    fecha_creacion DATETIME DEFAULT GETDATE(),
+    fecha_envio DATETIME,
+    metodo_envio VARCHAR(20) DEFAULT 'push',
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (tipo_notificacion_id) REFERENCES TipoNotificacion(tipo_notificacion_id)
+);
+
+CREATE TABLE PreferenciaNotificacion (
+    preferencia_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT NOT NULL UNIQUE,
+    notif_nuevas_propuestas BIT DEFAULT 1,
+    notif_respuestas_propuestas BIT DEFAULT 1,
+    notif_trueques_completados BIT DEFAULT 1,
+    notif_nuevos_seguidores BIT DEFAULT 1,
+    notif_actividad_seguidos BIT DEFAULT 1,
+    notif_por_email BIT DEFAULT 1,
+    notif_por_push BIT DEFAULT 1,
+    silenciado_hasta DATETIME,
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id)
+);
+
+-- =============================================
+-- SISTEMA DE REPORTES Y MODERACIÓN
+-- =============================================
+
+CREATE TABLE Reporte (
+    reporte_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_reportador_id INT NOT NULL,
+    usuario_reportado_id INT,
+    prenda_reportada_id INT,
+    categoria_reporte_id INT NOT NULL,
+    descripcion VARCHAR(1000) NOT NULL,
+    evidencia_url VARCHAR(500),
+    estado_reporte VARCHAR(20) DEFAULT 'pendiente',
+    fecha_reporte DATETIME DEFAULT GETDATE(),
+    fecha_resolucion DATETIME,
+    administrador_id INT,
+    comentario_resolucion VARCHAR(500),
+    FOREIGN KEY (usuario_reportador_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (usuario_reportado_id) REFERENCES Usuario(usuario_id),
+    FOREIGN KEY (prenda_reportada_id) REFERENCES Prenda(prenda_id),
+    FOREIGN KEY (categoria_reporte_id) REFERENCES CategoriaReporte(categoria_reporte_id),
+    FOREIGN KEY (administrador_id) REFERENCES Usuario(usuario_id)
+);
+
+-- =============================================
+-- CONFIGURACIONES DE INTERFAZ Y AUDITORÍA
+-- =============================================
+
+CREATE TABLE ConfiguracionInterfaz (
+    configuracion_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    tema_oscuro BIT DEFAULT 0,
+    notificaciones_sonido BIT DEFAULT 1,
+    densidad_contenido VARCHAR(20) DEFAULT 'normal',
+    tamanio_fuente VARCHAR(20) DEFAULT 'medio',
+    idioma VARCHAR(10) DEFAULT 'es',
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id) ON DELETE CASCADE
+);
+
+CREATE TABLE ConfiguracionModulo (
+    config_modulo_id INT IDENTITY(1,1) PRIMARY KEY,
+    modulo VARCHAR(50) NOT NULL CHECK (modulo IN ('catalogo', 'trueques', 'reputacion', 'mensajes', 'perfil')),
+    usuario_id INT NOT NULL,
+    configuracion_json VARCHAR(1000),
+    fecha_actualizacion DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id) ON DELETE CASCADE,
+    UNIQUE(usuario_id, modulo)
+);
+
+CREATE TABLE LogInteraccionUI (
+    log_id INT IDENTITY(1,1) PRIMARY KEY,
+    usuario_id INT,
+    elemento_ui VARCHAR(100) NOT NULL,
+    accion VARCHAR(50) NOT NULL,
+    valor_anterior VARCHAR(500),
+    valor_nuevo VARCHAR(500),
+    fecha_interaccion DATETIME DEFAULT GETDATE(),
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(500),
+    FOREIGN KEY (usuario_id) REFERENCES Usuario(usuario_id)
+);
+
+CREATE TABLE HistorialPrenda (
+    historial_id INT IDENTITY(1,1) PRIMARY KEY,
+    prenda_id INT NOT NULL,
+    campo_modificado VARCHAR(100) NOT NULL,
+    valor_anterior VARCHAR(500),
+    valor_nuevo VARCHAR(500),
+    usuario_modificador_id INT NOT NULL,
+    fecha_modificacion DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (prenda_id) REFERENCES Prenda(prenda_id),
+    FOREIGN KEY (usuario_modificador_id) REFERENCES Usuario(usuario_id)
+);
+
+CREATE TABLE SesionAdministrador (
+    sesion_id INT IDENTITY(1,1) PRIMARY KEY,
+    administrador_id INT NOT NULL,
+    token_sesion VARCHAR(500) NOT NULL,
+    fecha_inicio DATETIME DEFAULT GETDATE(),
+    fecha_ultima_actividad DATETIME DEFAULT GETDATE(),
+    fecha_expiracion DATETIME,
+    activa BIT DEFAULT 1,
+    FOREIGN KEY (administrador_id) REFERENCES Usuario(usuario_id)
+);

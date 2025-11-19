@@ -1,0 +1,39 @@
+-- =============================================
+-- ÍNDICES PARA OPTIMIZACIÓN DE RENDIMIENTO
+-- =============================================
+
+CREATE INDEX IX_Prendas_EstadoPublicacion ON Prendas(estado_publicacion_id);
+CREATE INDEX IX_Prendas_Categoria ON Prendas(categoria_id);
+CREATE INDEX IX_Prendas_Usuario ON Prendas(usuario_id);
+CREATE INDEX IX_Prendas_Titulo ON Prendas(titulo_publicacion);
+CREATE INDEX IX_Prendas_FechaPublicacion ON Prendas(fecha_publicacion);
+
+CREATE INDEX IX_Propuestas_Estado ON PropuestasTrueque(estado_propuesta_id);
+CREATE INDEX IX_Propuestas_Proponente ON PropuestasTrueque(usuario_proponente_id);
+CREATE INDEX IX_Propuestas_FechaExpiracion ON PropuestasTrueque(fecha_expiracion);
+
+CREATE INDEX IX_DetallePropuestas_Propuesta ON DetallePropuestas(propuesta_id);
+CREATE INDEX IX_DetallePropuestas_Prenda ON DetallePropuestas(prenda_id);
+CREATE INDEX IX_DetallePropuestas_Tipo ON DetallePropuestas(tipo_participacion);
+
+CREATE INDEX IX_Notificaciones_Usuario ON Notificaciones(usuario_id);
+CREATE INDEX IX_Notificaciones_Leida ON Notificaciones(leida);
+CREATE INDEX IX_Notificaciones_Fecha ON Notificaciones(fecha_creacion);
+
+CREATE INDEX IX_Evaluaciones_UsuarioEvaluado ON Evaluaciones(usuario_evaluado_id);
+CREATE INDEX IX_Evaluaciones_Fecha ON Evaluaciones(fecha_evaluacion);
+
+CREATE INDEX IX_Reportes_Estado ON Reportes(estado_reporte);
+CREATE INDEX IX_Reportes_Fecha ON Reportes(fecha_reporte);
+
+CREATE INDEX IX_Usuarios_Correo ON Usuarios(correo_electronico);
+CREATE INDEX IX_Usuarios_Estado ON Usuarios(estado_usuario);
+
+CREATE INDEX IX_Favoritos_Usuario ON Favoritos(usuario_id);
+CREATE INDEX IX_Favoritos_Prenda ON Favoritos(prenda_id);
+
+CREATE INDEX IX_Mensajes_Propuesta ON MensajesNegociacion(propuesta_id);
+CREATE INDEX IX_Mensajes_Usuario ON MensajesNegociacion(usuario_id);
+
+CREATE INDEX IX_Seguimiento_Seguidor ON SeguimientoUsuarios(usuario_seguidor_id);
+CREATE INDEX IX_Seguimiento_Seguido ON SeguimientoUsuarios(usuario_seguido_id);
