@@ -31,6 +31,8 @@ El desarrollo sigue una metodología ágil con **tablero Kanban** para gestión 
 - `/diagramas` - Diagramas
 - `/codigo` - Código fuente Blazor Server
 - `/assets` - Imágenes y recursos 
+- `/database` - Base de datos y scripts
+- `/desing` - 
 
 ## Licencia
 Este proyecto está bajo la Licencia MIT - ver archivo [LICENSE](LICENSE) para detalles.
