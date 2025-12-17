@@ -1,0 +1,344 @@
+@page "/configuracion-interfaz"
+@rendermode InteractiveServer
+
+@using TruequeTextil.Features.ConfiguracionInterfaz.Interfaces
+@using TruequeTextil.Shared.Models
+@using TruequeTextil.Shared.Components
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h1 class="h3 mb-1 text-stone-900">Configuración de Interfaz</h1>
+                    <p class="text-stone-600 mb-0">Personaliza tu experiencia en la plataforma</p>
+                </div>
+                <button class="btn btn-outline-secondary" @onclick="NavigateBack">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    @errorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    @successMessage
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom-0">
+                            <h5 class="mb-0 text-stone-900">
+                                <i class="bi bi-gear me-2 text-amber-600"></i>
+                                Preferencias de Interfaz
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <EditForm Model="configuracion" OnValidSubmit="GuardarConfiguracion">
+                                <DataAnnotationsValidator />
+
+                                <!-- Tema Oscuro -->
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1 text-stone-900">Tema Oscuro</h6>
+                                            <p class="small text-stone-600 mb-0">Cambia entre tema claro y oscuro</p>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <InputCheckbox id="temaOscuro" @bind-Value="configuracion.TemaOscuro"
+                                                class="form-check-input" />
+                                            <label class="form-check-label" for="temaOscuro">
+                                                @if (configuracion.TemaOscuro)
+                                                {
+                                                    <i class="bi bi-moon-stars text-stone-600"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-sun text-amber-600"></i>
+                                                }
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Notificaciones de Sonido -->
+                                <div class="mb-4">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1 text-stone-900">Notificaciones de Sonido</h6>
+                                            <p class="small text-stone-600 mb-0">Reproduce sonidos para notificaciones
+                                            </p>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <InputCheckbox id="notificacionesSonido"
+                                                @bind-Value="configuracion.NotificacionesSonido"
+                                                class="form-check-input" />
+                                            <label class="form-check-label" for="notificacionesSonido">
+                                                @if (configuracion.NotificacionesSonido)
+                                                {
+                                                    <i class="bi bi-volume-up text-stone-600"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-volume-mute text-stone-400"></i>
+                                                }
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Densidad de Contenido -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium text-stone-700">Densidad de Contenido</label>
+                                    <select class="form-select" @bind="configuracion.DensidadContenido">
+                                        <option value="">Predeterminado</option>
+                                        <option value="compacto">Compacto</option>
+                                        <option value="comodo">Cómodo</option>
+                                        <option value="espacioso">Espacioso</option>
+                                    </select>
+                                    <div class="form-text">Controla el espaciado entre elementos</div>
+                                </div>
+
+                                <!-- Tamaño de Fuente -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium text-stone-700">Tamaño de Fuente</label>
+                                    <select class="form-select" @bind="configuracion.TamanioFuente">
+                                        <option value="">Predeterminado</option>
+                                        <option value="pequeno">Pequeño</option>
+                                        <option value="mediano">Mediano</option>
+                                        <option value="grande">Grande</option>
+                                        <option value="extra-grande">Extra Grande</option>
+                                    </select>
+                                    <div class="form-text">Ajusta el tamaño del texto en la interfaz</div>
+                                </div>
+
+                                <!-- Idioma -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-medium text-stone-700">Idioma</label>
+                                    <select class="form-select" @bind="configuracion.Idioma">
+                                        <option value="">Predeterminado del Sistema</option>
+                                        <option value="es">Español</option>
+                                        <option value="en">English</option>
+                                        <option value="pt">Português</option>
+                                    </select>
+                                    <div class="form-text">Selecciona el idioma de la interfaz</div>
+                                </div>
+
+                                <!-- Botones de Acción -->
+                                <div class="d-flex gap-3 pt-3 border-top">
+                                    <button type="submit" class="btn btn-primary" disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span>Guardando...</span>
+                                         }
+                                        else
+                                        {
+                                            <i class="bi bi-check-circle me-2"></i>
+                                            <span>Guardar Cambios</span>
+                                         }
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        @onclick="RestablecerConfiguracion">
+                                        <i class="bi bi-arrow-counterclockwise me-2"></i>
+                                        Restablecer
+                                    </button>
+                                </div>
+                            </EditForm>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!-- Vista Previa -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom-0">
+                            <h6 class="mb-0 text-stone-900">
+                                <i class="bi bi-eye me-2 text-amber-600"></i>
+                                Vista Previa
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="border rounded p-3" style="@GetPreviewStyle()">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-stone-200 rounded-circle me-3" style="width: 40px; height: 40px;">
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium text-stone-900" style="@GetFontSizeStyle()">Usuario
+                                            Ejemplo</div>
+                                        <small class="text-stone-600">Vista previa de configuración</small>
+                                    </div>
+                                </div>
+                                <p class="mb-0 text-stone-700" style="@GetFontSizeStyle()">
+                                    Esta es una vista previa de cómo se verá el contenido con tu configuración actual.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información -->
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-body">
+                            <h6 class="text-stone-900 mb-3">
+                                <i class="bi bi-info-circle text-amber-600 me-2"></i>
+                                Información
+                            </h6>
+                            <div class="small text-stone-600">
+                                <p class="mb-2">Los cambios se aplican inmediatamente después de guardar.</p>
+                                <p class="mb-0">Puedes restablecer la configuración en cualquier momento.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ConfiguracionInterfazModel configuracion = new();
+    private bool isLoading = false;
+    private string? errorMessage;
+    private string? successMessage;
+    private int? currentUserId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadConfiguracion();
+    }
+
+    private async Task LoadConfiguracion()
+    {
+        try
+        {
+            // TODO: Obtener usuario actual del contexto de autenticación
+            currentUserId = 1; // Simulado
+
+            if (currentUserId.HasValue)
+            {
+                var config = await ConfiguracionService.ObtenerConfiguracionPorUsuario(currentUserId.Value);
+                if (config != null)
+                {
+                    configuracion = config;
+                }
+                else
+                {
+                    // Configuración por defecto
+                    configuracion = new ConfiguracionInterfazModel
+                    {
+                        UsuarioId = currentUserId.Value,
+                        TemaOscuro = false,
+                        NotificacionesSonido = true,
+                        DensidadContenido = null,
+                        TamanioFuente = null,
+                        Idioma = null
+                    };
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar configuración: {ex.Message}";
+        }
+    }
+
+    private async Task GuardarConfiguracion()
+    {
+        if (!currentUserId.HasValue)
+        {
+            errorMessage = "Usuario no identificado";
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+        isLoading = true;
+
+        try
+        {
+            configuracion.UsuarioId = currentUserId.Value;
+            var (success, error) = await ConfiguracionService.GuardarConfiguracion(configuracion);
+
+            if (success)
+            {
+                successMessage = "Configuración guardada exitosamente";
+            }
+            else
+            {
+                errorMessage = error ?? "Error al guardar la configuración";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al guardar: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RestablecerConfiguracion()
+    {
+        if (!currentUserId.HasValue) return;
+
+        configuracion = new ConfiguracionInterfazModel
+        {
+            UsuarioId = currentUserId.Value,
+            TemaOscuro = false,
+            NotificacionesSonido = true,
+            DensidadContenido = null,
+            TamanioFuente = null,
+            Idioma = null
+        };
+
+        successMessage = "Configuración restablecida a valores por defecto";
+        errorMessage = null;
+    }
+
+    private string GetPreviewStyle()
+    {
+        var styles = new List<string>();
+
+        if (configuracion.TemaOscuro)
+        {
+            styles.Add("background-color: #1f2937");
+            styles.Add("color: #f9fafb");
+        }
+
+        return string.Join("; ", styles);
+    }
+
+    private string GetFontSizeStyle()
+    {
+        return configuracion.TamanioFuente switch
+        {
+            "pequeno" => "font-size: 0.875rem",
+            "mediano" => "font-size: 1rem",
+            "grande" => "font-size: 1.125rem",
+            "extra-grande" => "font-size: 1.25rem",
+            _ => ""
+        };
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/perfil");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IConfiguracionInterfazService ConfiguracionService { get; set; } = default!;
+}

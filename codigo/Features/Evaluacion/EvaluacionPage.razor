@@ -1,0 +1,482 @@
+@page "/evaluacion/{propuestaId:int}"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.Evaluacion.Interfaces
+@using TruequeTextil.Shared.Models
+@using TruequeTextil.Shared.Services
+@using EvaluacionModel = TruequeTextil.Shared.Models.Evaluacion
+
+<div class="min-vh-100 bg-stone-50">
+    <!-- Header -->
+    <div class="bg-white border-bottom border-stone-200 sticky-top">
+        <div class="container" style="max-width: 896px;">
+            <div class="px-4 py-3 d-flex align-items-center justify-content-between">
+                <button @onclick="VolverAtras"
+                    class="btn btn-link text-stone-600 text-decoration-none d-flex align-items-center gap-2 p-0">
+                    <i class="bi bi-arrow-left"></i>
+                    <span class="small">Volver</span>
+                </button>
+
+                <h1 class="h6 fw-semibold text-stone-900 mb-0">Evaluar trueque</h1>
+
+                <div style="width: 4rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container" style="max-width: 896px;">
+        <div class="p-4">
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-amber-600" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            }
+            else if (!puedeEvaluar)
+            {
+                <!-- No puede evaluar -->
+                <div class="card rounded-4 shadow text-center p-5">
+                    @if (yaEvaluo)
+                    {
+                        <div class="bg-success bg-opacity-10 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 5rem; height: 5rem;">
+                            <i class="bi bi-check-circle-fill text-success" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h2 class="text-stone-900 fw-bold mb-3">Ya has evaluado este trueque</h2>
+                        <p class="text-stone-600 mb-4">Gracias por compartir tu experiencia. Tu evaluacion ayuda a la comunidad.</p>
+
+                        @if (miEvaluacion != null)
+                        {
+                            <div class="bg-stone-50 rounded-3 p-4 mb-4">
+                                <div class="d-flex justify-content-center gap-1 mb-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= miEvaluacion.CalificacionGeneral ? "bi-star-fill text-amber-500" : "bi-star text-stone-300")" style="font-size: 1.5rem;"></i>
+                                    }
+                                </div>
+                                <p class="text-stone-700 mb-0 small">@miEvaluacion.CalificacionGeneral estrellas</p>
+                                @if (!string.IsNullOrEmpty(miEvaluacion.Comentario))
+                                {
+                                    <p class="text-stone-600 mt-2 mb-0 fst-italic">"@miEvaluacion.Comentario"</p>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="bg-warning bg-opacity-10 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 5rem; height: 5rem;">
+                            <i class="bi bi-exclamation-triangle-fill text-warning" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <h2 class="text-stone-900 fw-bold mb-3">No puedes evaluar este trueque</h2>
+                        <p class="text-stone-600 mb-4">Solo puedes evaluar trueques completados en los que participaste.</p>
+                    }
+
+                    <button @onclick="VolverAtras" class="btn btn-primary rounded-3 px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Volver
+                    </button>
+                </div>
+            }
+            else
+            {
+                <!-- Formulario de evaluacion -->
+                @if (!string.IsNullOrEmpty(mensajeError))
+                {
+                    <div class="alert alert-danger rounded-3 mb-4">
+                        <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(mensajeExito))
+                {
+                    <div class="alert alert-success rounded-3 mb-4">
+                        <i class="bi bi-check-circle me-2"></i>@mensajeExito
+                    </div>
+                }
+
+                <!-- Info del trueque -->
+                <div class="card rounded-4 shadow mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 2.5rem; height: 2.5rem;">
+                                <i class="bi bi-arrow-left-right"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-stone-900 fw-medium mb-0">Trueque #@PropuestaId</h2>
+                                <p class="text-stone-500 small mb-0">Evalua tu experiencia con @usuarioEvaluado?.Nombre</p>
+                            </div>
+                        </div>
+
+                        @if (usuarioEvaluado != null)
+                        {
+                            <div class="d-flex align-items-center gap-3 p-3 bg-stone-50 rounded-3">
+                                @if (!string.IsNullOrEmpty(usuarioEvaluado.UrlFotoPerfil))
+                                {
+                                    <img src="@usuarioEvaluado.UrlFotoPerfil" alt="@usuarioEvaluado.Nombre"
+                                         class="rounded-circle border border-2 border-stone-200"
+                                         style="width: 3rem; height: 3rem; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white fw-medium"
+                                         style="width: 3rem; height: 3rem;">
+                                        @GetIniciales(usuarioEvaluado.Nombre)
+                                    </div>
+                                }
+                                <div>
+                                    <p class="text-stone-900 fw-medium mb-0">@usuarioEvaluado.Nombre @usuarioEvaluado.Apellido</p>
+                                    <div class="d-flex align-items-center gap-1">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="bi @(i <= Math.Round(usuarioEvaluado.ReputacionPromedio) ? "bi-star-fill text-amber-500" : "bi-star text-stone-300")" style="font-size: 0.75rem;"></i>
+                                        }
+                                        <span class="text-stone-500 small ms-1">(@usuarioEvaluado.Estadisticas.Valoraciones evaluaciones)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Calificacion general -->
+                <div class="card rounded-4 shadow mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-100 rounded-circle d-flex align-items-center justify-content-center" style="width: 2rem; height: 2rem;">
+                                <span class="text-amber-700 fw-bold small">1</span>
+                            </div>
+                            <h3 class="text-stone-900 fw-medium mb-0">Calificacion general</h3>
+                        </div>
+
+                        <p class="text-stone-600 mb-4">Como fue tu experiencia general en este trueque?</p>
+
+                        <div class="d-flex justify-content-center gap-2 mb-3">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                var rating = i;
+                                <button @onclick="() => SetCalificacionGeneral(rating)"
+                                        class="btn p-0 border-0 bg-transparent transition-transform @(calificacionGeneral >= rating ? "scale-110" : "opacity-50")"
+                                        style="font-size: 2.5rem;">
+                                    <i class="bi @(calificacionGeneral >= rating ? "bi-star-fill text-amber-500" : "bi-star text-stone-300")"></i>
+                                </button>
+                            }
+                        </div>
+
+                        <div class="text-center">
+                            <span class="badge @GetCalificacionBadgeClass() rounded-pill px-3 py-2">
+                                @GetCalificacionTexto()
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dimensiones de evaluacion RF-13 -->
+                <div class="card rounded-4 shadow mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-100 rounded-circle d-flex align-items-center justify-content-center" style="width: 2rem; height: 2rem;">
+                                <span class="text-amber-700 fw-bold small">2</span>
+                            </div>
+                            <h3 class="text-stone-900 fw-medium mb-0">Evalua por aspectos</h3>
+                        </div>
+
+                        <p class="text-stone-600 mb-4">Califica cada aspecto de la experiencia (opcional pero recomendado)</p>
+
+                        <div class="d-flex flex-column gap-4">
+                            @foreach (var dimension in dimensiones)
+                            {
+                                <div class="border border-stone-200 rounded-3 p-3">
+                                    <div class="d-flex align-items-start justify-content-between mb-2">
+                                        <div>
+                                            <h4 class="text-stone-900 fw-medium mb-1 small">@dimension.NombreDimension</h4>
+                                            @if (!string.IsNullOrEmpty(dimension.Descripcion))
+                                            {
+                                                <p class="text-stone-500 mb-0" style="font-size: 0.75rem;">@dimension.Descripcion</p>
+                                            }
+                                        </div>
+                                        @if (dimension.Peso > 1)
+                                        {
+                                            <span class="badge bg-amber-100 text-amber-700 rounded-pill" style="font-size: 0.65rem;">
+                                                Peso x@dimension.Peso.ToString("0.#")
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div class="d-flex gap-1">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            var rating = i;
+                                            var dimId = dimension.DimensionId;
+                                            var currentRating = calificacionesPorDimension.GetValueOrDefault(dimId, 0);
+                                            <button @onclick="() => SetCalificacionDimension(dimId, rating)"
+                                                    class="btn p-0 border-0 bg-transparent"
+                                                    style="font-size: 1.25rem;">
+                                                <i class="bi @(currentRating >= rating ? "bi-star-fill text-amber-500" : "bi-star text-stone-300")"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comentario -->
+                <div class="card rounded-4 shadow mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-100 rounded-circle d-flex align-items-center justify-content-center" style="width: 2rem; height: 2rem;">
+                                <span class="text-amber-700 fw-bold small">3</span>
+                            </div>
+                            <h3 class="text-stone-900 fw-medium mb-0">Comentario (opcional)</h3>
+                        </div>
+
+                        <textarea @bind="comentario" maxlength="250"
+                                  class="form-control rounded-3 focus-ring-amber" rows="4"
+                                  placeholder="Comparte tu experiencia con otros usuarios. Que te gusto? Que podria mejorar?"></textarea>
+                        <small class="text-stone-500">@comentario.Length/250 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Mensaje de sostenibilidad -->
+                <div class="card rounded-4 border-amber-200 mb-4" style="background: linear-gradient(90deg, #fef3c7 0%, #f5f5f4 100%);">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="bi bi-heart-fill fs-4 text-amber-600"></i>
+                            <div>
+                                <h4 class="text-stone-900 fw-medium mb-1 small">Tu opinion importa</h4>
+                                <p class="text-stone-700 small mb-0">
+                                    Las evaluaciones ayudan a construir una comunidad de confianza y promueven el intercambio responsable.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boton de enviar -->
+                <div class="d-grid gap-2">
+                    <button @onclick="EnviarEvaluacion"
+                            class="btn btn-primary text-white rounded-3 py-3 fw-medium"
+                            disabled="@(!FormularioValido() || enviando)">
+                        @if (enviando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            <span>Enviando evaluacion...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-send me-2"></i>
+                            <span>Enviar evaluacion</span>
+                        }
+                    </button>
+
+                    <button @onclick="VolverAtras" class="btn btn-outline-secondary rounded-3 py-2">
+                        Cancelar
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Espaciado para navegacion movil -->
+    <div class="d-md-none" style="height: 5rem;"></div>
+</div>
+
+@code {
+    [Parameter] public int PropuestaId { get; set; }
+
+    // Injected services
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private IEvaluacionService EvaluacionService { get; set; } = default!;
+    [Inject] private AutenticacionService AutenticacionService { get; set; } = default!;
+
+    // State
+    private bool cargando = true;
+    private bool enviando = false;
+    private bool puedeEvaluar = false;
+    private bool yaEvaluo = false;
+    private string mensajeError = string.Empty;
+    private string mensajeExito = string.Empty;
+
+    // Usuario
+    private Usuario? usuarioActual;
+    private Usuario? usuarioEvaluado;
+    private EvaluacionModel? miEvaluacion;
+
+    // Dimensiones RF-13
+    private List<DimensionEvaluacion> dimensiones = new();
+    private Dictionary<int, int> calificacionesPorDimension = new();
+
+    // Form data
+    private int calificacionGeneral = 0;
+    private string comentario = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            cargando = true;
+
+            // Obtener usuario actual
+            usuarioActual = await AutenticacionService.GetCurrentUser();
+            if (usuarioActual == null)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            // Verificar si puede evaluar
+            puedeEvaluar = await EvaluacionService.PuedeEvaluar(PropuestaId, usuarioActual.UsuarioId);
+
+            // Si no puede evaluar, verificar si ya evaluo
+            if (!puedeEvaluar)
+            {
+                miEvaluacion = await EvaluacionService.ObtenerMiEvaluacion(PropuestaId, usuarioActual.UsuarioId);
+                yaEvaluo = miEvaluacion != null;
+            }
+            else
+            {
+                // Cargar dimensiones de evaluacion
+                dimensiones = await EvaluacionService.ObtenerDimensiones();
+
+                // Inicializar calificaciones por dimension en 0
+                foreach (var dim in dimensiones)
+                {
+                    calificacionesPorDimension[dim.DimensionId] = 0;
+                }
+
+                // Obtener info del usuario a evaluar (contraparte)
+                await CargarUsuarioEvaluado();
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al cargar los datos: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task CargarUsuarioEvaluado()
+    {
+        usuarioEvaluado = await EvaluacionService.ObtenerUsuarioAEvaluar(PropuestaId, usuarioActual!.UsuarioId);
+    }
+
+    private void SetCalificacionGeneral(int rating)
+    {
+        calificacionGeneral = rating;
+    }
+
+    private void SetCalificacionDimension(int dimensionId, int rating)
+    {
+        calificacionesPorDimension[dimensionId] = rating;
+    }
+
+    private bool FormularioValido()
+    {
+        return calificacionGeneral >= 1 && calificacionGeneral <= 5;
+    }
+
+    private async Task EnviarEvaluacion()
+    {
+        if (!FormularioValido() || enviando) return;
+
+        mensajeError = string.Empty;
+        mensajeExito = string.Empty;
+        enviando = true;
+
+        try
+        {
+            // Filtrar solo dimensiones con calificacion
+            var dimensionesCalificadas = calificacionesPorDimension
+                .Where(kvp => kvp.Value > 0)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            var evaluacionDTO = new EvaluacionDTO(
+                CalificacionGeneral: calificacionGeneral,
+                Comentario: string.IsNullOrWhiteSpace(comentario) ? null : comentario.Trim(),
+                CalificacionesPorDimension: dimensionesCalificadas
+            );
+
+            var (exito, mensaje) = await EvaluacionService.CrearEvaluacion(
+                PropuestaId,
+                usuarioActual!.UsuarioId,
+                evaluacionDTO
+            );
+
+            if (exito)
+            {
+                mensajeExito = mensaje;
+                puedeEvaluar = false;
+                yaEvaluo = true;
+
+                // Cargar la evaluacion recien creada para mostrarla
+                miEvaluacion = await EvaluacionService.ObtenerMiEvaluacion(PropuestaId, usuarioActual.UsuarioId);
+
+                // Redirigir despues de un momento
+                await Task.Delay(2000);
+                NavigationManager.NavigateTo($"/detalle-propuesta/{PropuestaId}");
+            }
+            else
+            {
+                mensajeError = mensaje;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al enviar la evaluacion: {ex.Message}";
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+    private void VolverAtras()
+    {
+        NavigationManager.NavigateTo($"/detalle-propuesta/{PropuestaId}");
+    }
+
+    private string GetIniciales(string? nombre)
+    {
+        if (string.IsNullOrEmpty(nombre)) return "?";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length >= 2)
+            return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+        return nombre.Length >= 2 ? nombre[..2].ToUpper() : nombre.ToUpper();
+    }
+
+    private string GetCalificacionTexto()
+    {
+        return calificacionGeneral switch
+        {
+            1 => "Muy mala experiencia",
+            2 => "Mala experiencia",
+            3 => "Experiencia regular",
+            4 => "Buena experiencia",
+            5 => "Excelente experiencia",
+            _ => "Selecciona una calificacion"
+        };
+    }
+
+    private string GetCalificacionBadgeClass()
+    {
+        return calificacionGeneral switch
+        {
+            1 => "bg-danger text-white",
+            2 => "bg-warning text-dark",
+            3 => "bg-secondary text-white",
+            4 => "bg-success text-white",
+            5 => "bg-amber-500 text-white",
+            _ => "bg-stone-200 text-stone-700"
+        };
+    }
+}

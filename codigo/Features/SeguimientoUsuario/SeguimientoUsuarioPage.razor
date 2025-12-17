@@ -1,0 +1,248 @@
+@page "/seguimiento/{usuarioId:int}"
+@rendermode InteractiveServer
+
+@using TruequeTextil.Features.SeguimientoUsuario.Interfaces
+@using TruequeTextil.Shared.Components
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h1 class="h3 mb-1 text-stone-900">Seguimiento</h1>
+                    <p class="text-stone-600 mb-0">Gestiona tus seguidores y seguidos</p>
+                </div>
+                <button class="btn btn-outline-secondary" @onclick="NavigateBack">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    @errorMessage
+                </div>
+            }
+
+            <!-- Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-amber-600 mb-2">@seguidoresCount</div>
+                            <h5 class="card-title text-stone-700">Seguidores</h5>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="display-4 text-amber-600 mb-2">@seguidosCount</div>
+                            <h5 class="card-title text-stone-700">Siguiendo</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-bottom-0">
+                    <ul class="nav nav-tabs card-header-tabs" id="seguimientoTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="seguidores-tab" data-bs-toggle="tab" data-bs-target="#seguidores" type="button" role="tab" aria-controls="seguidores" aria-selected="true">
+                                <i class="bi bi-people me-2"></i>Seguidores (@seguidoresCount)
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="seguidos-tab" data-bs-toggle="tab" data-bs-target="#seguidos" type="button" role="tab" aria-controls="seguidos" aria-selected="false">
+                                <i class="bi bi-person-check me-2"></i>Siguiendo (@seguidosCount)
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="seguimientoTabContent">
+                        <!-- Seguidores Tab -->
+                        <div class="tab-pane fade show active" id="seguidores" role="tabpanel" aria-labelledby="seguidores-tab">
+                            @if (seguidores.Count == 0)
+                            {
+                                <div class="text-center py-5">
+                                    <i class="bi bi-people display-1 text-stone-300 mb-3"></i>
+                                    <h5 class="text-stone-600">Aún no tienes seguidores</h5>
+                                    <p class="text-stone-500">Cuando otros usuarios te sigan, aparecerán aquí</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row g-3">
+                                    @foreach (var seguidorId in seguidores)
+                                    {
+                                        <div class="col-12">
+                                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-stone-200 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                        <i class="bi bi-person text-stone-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0 text-stone-900">Usuario @seguidorId</h6>
+                                                        <small class="text-stone-500">Se unió recientemente</small>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    @if (currentUserId.HasValue && seguidorId != currentUserId.Value)
+                                                    {
+                                                        @if (estadoSeguimiento.TryGetValue(seguidorId, out var sigue) && sigue)
+                                                        {
+                                                            <button class="btn btn-outline-secondary btn-sm" @onclick="() => DejarDeSeguir(seguidorId)">
+                                                                <i class="bi bi-person-dash me-1"></i>Siguiendo
+                                                            </button>
+                                                        }
+                                                        else
+                                                        {
+                                                            <button class="btn btn-primary btn-sm" @onclick="() => Seguir(seguidorId)">
+                                                                <i class="bi bi-person-plus me-1"></i>Seguir
+                                                            </button>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Siguiendo Tab -->
+                        <div class="tab-pane fade" id="seguidos" role="tabpanel" aria-labelledby="seguidos-tab">
+                            @if (seguidos.Count == 0)
+                            {
+                                <div class="text-center py-5">
+                                    <i class="bi bi-person-check display-1 text-stone-300 mb-3"></i>
+                                    <h5 class="text-stone-600">Aún no sigues a nadie</h5>
+                                    <p class="text-stone-500">Explora perfiles de otros usuarios para comenzar a seguirlos</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row g-3">
+                                    @foreach (var seguidoId in seguidos)
+                                    {
+                                        <div class="col-12">
+                                            <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-stone-200 rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                        <i class="bi bi-person text-stone-600"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0 text-stone-900">Usuario @seguidoId</h6>
+                                                        <small class="text-stone-500">Siguiendo desde hace tiempo</small>
+                                                    </div>
+                                                </div>
+                                                <button class="btn btn-outline-danger btn-sm" @onclick="() => DejarDeSeguir(seguidoId)">
+                                                    <i class="bi bi-person-dash me-1"></i>Dejar de seguir
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int UsuarioId { get; set; }
+
+    private List<int> seguidores = new();
+    private List<int> seguidos = new();
+    private int seguidoresCount = 0;
+    private int seguidosCount = 0;
+    private int? currentUserId;
+    private string? errorMessage;
+
+    private Dictionary<int, bool> estadoSeguimiento = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            currentUserId = 1; // TODO: auth real
+
+            seguidores = await SeguimientoService.ObtenerSeguidores(UsuarioId);
+            seguidos = await SeguimientoService.ObtenerSeguidos(UsuarioId);
+
+            seguidoresCount = seguidores.Count;
+            seguidosCount = seguidos.Count;
+
+            estadoSeguimiento.Clear();
+
+            if (currentUserId.HasValue)
+            {
+                foreach (var seguidorId in seguidores)
+                {
+                    estadoSeguimiento[seguidorId] =
+                        await SeguimientoService.EstaSiguiendo(
+                            currentUserId.Value,
+                            seguidorId
+                        );
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar datos: {ex.Message}";
+        }
+    }
+
+
+    private async Task Seguir(int usuarioId)
+    {
+        if (!currentUserId.HasValue) return;
+
+        var (success, error) = await SeguimientoService.SeguirUsuario(currentUserId.Value, usuarioId);
+        if (success)
+        {
+            await LoadData(); // Recargar datos
+        }
+        else
+        {
+            errorMessage = error ?? "Error al seguir usuario";
+        }
+    }
+
+    private async Task DejarDeSeguir(int usuarioId)
+    {
+        if (!currentUserId.HasValue) return;
+
+        var (success, error) = await SeguimientoService.DejarDeSeguirUsuario(currentUserId.Value, usuarioId);
+        if (success)
+        {
+            await LoadData(); // Recargar datos
+        }
+        else
+        {
+            errorMessage = error ?? "Error al dejar de seguir usuario";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo("/perfil-publico/" + UsuarioId);
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private ISeguimientoUsuarioService SeguimientoService { get; set; } = default!;
+}

@@ -1,0 +1,385 @@
+@page "/mis-reportes"
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using TruequeTextil.Features.Reportar.Interfaces
+@using TruequeTextil.Shared.Models
+@using TruequeTextil.Shared.Services
+
+<div class="min-vh-100 bg-stone-50">
+    <!-- Header -->
+    <div class="bg-white border-bottom border-stone-200 sticky-top">
+        <div class="container" style="max-width: 900px;">
+            <div class="px-4 py-3 d-flex align-items-center justify-content-between">
+                <button @onclick="VolverAtras"
+                    class="btn btn-link text-stone-600 text-decoration-none d-flex align-items-center gap-2 p-0">
+                    <i class="bi bi-arrow-left"></i>
+                    <span class="small">Volver</span>
+                </button>
+
+                <h1 class="h6 fw-semibold text-stone-900 mb-0">Mis Reportes</h1>
+
+                <div style="width: 4rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container" style="max-width: 900px;">
+        <div class="p-4">
+            <!-- Titulo y descripcion -->
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="bg-amber-600 rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
+                    <i class="bi bi-flag text-white"></i>
+                </div>
+                <div>
+                    <h2 class="text-stone-900 fw-semibold mb-0">Historial de Reportes</h2>
+                    <p class="text-stone-500 small mb-0">Revisa el estado de los reportes que has enviado</p>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card rounded-3 shadow-sm mb-4">
+                <div class="card-body p-3">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-4">
+                            <select class="form-select rounded-3" @bind="filtroEstado" @bind:after="AplicarFiltros">
+                                <option value="todos">Todos los estados</option>
+                                <option value="pendiente">Pendientes</option>
+                                <option value="revisado">En revision</option>
+                                <option value="resuelto">Resueltos</option>
+                                <option value="desestimado">Desestimados</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select rounded-3" @bind="filtroTipo" @bind:after="AplicarFiltros">
+                                <option value="todos">Todos los tipos</option>
+                                <option value="usuario">Usuarios</option>
+                                <option value="prenda">Prendas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <span class="text-stone-500 small">@reportesFiltrados.Count reportes encontrados</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-amber-600" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            }
+            else if (!reportesFiltrados.Any())
+            {
+                <!-- Sin reportes -->
+                <div class="card rounded-4 shadow text-center p-5">
+                    <div class="bg-stone-100 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 5rem; height: 5rem;">
+                        <i class="bi bi-inbox text-stone-400" style="font-size: 2.5rem;"></i>
+                    </div>
+                    <h3 class="text-stone-900 fw-bold mb-3">
+                        @if (filtroEstado != "todos" || filtroTipo != "todos")
+                        {
+                            <text>No hay reportes con estos filtros</text>
+                        }
+                        else
+                        {
+                            <text>No has enviado reportes</text>
+                        }
+                    </h3>
+                    <p class="text-stone-600 mb-4">
+                        @if (filtroEstado != "todos" || filtroTipo != "todos")
+                        {
+                            <text>Intenta cambiar los filtros para ver mas resultados.</text>
+                        }
+                        else
+                        {
+                            <text>Si encuentras algo inapropiado, puedes reportarlo desde el perfil de un usuario o el detalle de una prenda.</text>
+                        }
+                    </p>
+                    @if (filtroEstado != "todos" || filtroTipo != "todos")
+                    {
+                        <button @onclick="LimpiarFiltros" class="btn btn-outline-primary rounded-3 px-4">
+                            <i class="bi bi-x-circle me-2"></i>Limpiar filtros
+                        </button>
+                    }
+                </div>
+            }
+            else
+            {
+                <!-- Lista de reportes -->
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var reporte in reportesFiltrados)
+                    {
+                        <div class="card rounded-3 shadow-sm @(reporte.Estado == EstadoReporte.Pendiente ? "border-start border-warning border-3" : "")">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-start gap-3">
+                                    <!-- Icono del tipo -->
+                                    <div class="@GetTipoBadgeClass(reporte.Tipo) rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 2.5rem; height: 2.5rem;">
+                                        <i class="bi @GetTipoIcon(reporte.Tipo) text-white"></i>
+                                    </div>
+
+                                    <!-- Contenido -->
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <div>
+                                                <span class="badge @GetEstadoBadgeClass(reporte.Estado) rounded-pill me-2">
+                                                    @GetEstadoTexto(reporte.Estado)
+                                                </span>
+                                                <span class="text-stone-500 small">Reporte de @GetTipoTexto(reporte.Tipo)</span>
+                                            </div>
+                                            <span class="text-stone-400 small">@FormatearFecha(reporte.FechaCreacion)</span>
+                                        </div>
+
+                                        <h4 class="text-stone-900 fw-medium mb-2">@reporte.Motivo</h4>
+
+                                        @if (!string.IsNullOrEmpty(reporte.Descripcion))
+                                        {
+                                            <p class="text-stone-600 small mb-3">@reporte.Descripcion</p>
+                                        }
+
+                                        <!-- Elemento reportado -->
+                                        <div class="bg-stone-50 rounded-3 p-3">
+                                            @if (reporte.Tipo == TipoReporte.Usuario && reporte.UsuarioReportado != null)
+                                            {
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white small"
+                                                         style="width: 2rem; height: 2rem;">
+                                                        @GetIniciales(reporte.UsuarioReportado.Nombre)
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-stone-900 small mb-0 fw-medium">@reporte.UsuarioReportado.Nombre @reporte.UsuarioReportado.Apellido</p>
+                                                        <p class="text-stone-500 mb-0" style="font-size: 0.7rem;">Usuario reportado</p>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else if (reporte.Tipo == TipoReporte.Prenda && reporte.PrendaReportada != null)
+                                            {
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="bg-stone-200 rounded-3 d-flex align-items-center justify-content-center"
+                                                         style="width: 2rem; height: 2rem;">
+                                                        <i class="bi bi-bag text-stone-500 small"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-stone-900 small mb-0 fw-medium">@reporte.PrendaReportada.TituloPublicacion</p>
+                                                        <p class="text-stone-500 mb-0" style="font-size: 0.7rem;">Prenda reportada</p>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="bg-stone-200 rounded-circle d-flex align-items-center justify-content-center"
+                                                         style="width: 2rem; height: 2rem;">
+                                                        <i class="bi bi-question text-stone-500 small"></i>
+                                                    </div>
+                                                    <p class="text-stone-500 small mb-0">Elemento no disponible</p>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <!-- Info de resolucion -->
+                                        @if (reporte.Estado == EstadoReporte.Resuelto || reporte.Estado == EstadoReporte.Desestimado)
+                                        {
+                                            <div class="mt-3 p-3 rounded-3 @(reporte.Estado == EstadoReporte.Resuelto ? "bg-success-subtle" : "bg-danger-subtle")">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <i class="bi @(reporte.Estado == EstadoReporte.Resuelto ? "bi-check-circle text-success" : "bi-x-circle text-danger")"></i>
+                                                    <span class="small fw-medium @(reporte.Estado == EstadoReporte.Resuelto ? "text-success" : "text-danger")">
+                                                        @(reporte.Estado == EstadoReporte.Resuelto ? "Reporte resuelto" : "Reporte desestimado")
+                                                    </span>
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(reporte.ComentarioResolucion))
+                                                {
+                                                    <p class="text-stone-700 small mb-0">@reporte.ComentarioResolucion</p>
+                                                }
+                                                @if (reporte.FechaResolucion.HasValue)
+                                                {
+                                                    <p class="text-stone-500 mb-0" style="font-size: 0.7rem;">Resuelto el @reporte.FechaResolucion.Value.ToString("dd/MM/yyyy")</p>
+                                                }
+                                            </div>
+                                        }
+                                        else if (reporte.Estado == EstadoReporte.Revisado)
+                                        {
+                                            <div class="mt-3 p-3 rounded-3 bg-info-subtle">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bi bi-eye text-info"></i>
+                                                    <span class="small fw-medium text-info">En revision por nuestro equipo</span>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (reporte.Estado == EstadoReporte.Pendiente)
+                                        {
+                                            <div class="mt-3 p-3 rounded-3 bg-warning-subtle">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bi bi-clock text-warning"></i>
+                                                    <span class="small fw-medium text-warning">Esperando revision (24-48 hrs)</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Espaciado para navegacion movil -->
+    <div class="d-md-none" style="height: 5rem;"></div>
+</div>
+
+@code {
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private IReportarService ReportarService { get; set; } = default!;
+    [Inject] private AutenticacionService AutenticacionService { get; set; } = default!;
+
+    private bool cargando = true;
+    private string filtroEstado = "todos";
+    private string filtroTipo = "todos";
+
+    private Usuario? usuarioActual;
+    private List<Reporte> reportes = new();
+    private List<Reporte> reportesFiltrados = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            cargando = true;
+
+            usuarioActual = await AutenticacionService.GetCurrentUser();
+            if (usuarioActual == null)
+            {
+                NavigationManager.NavigateTo("/login");
+                return;
+            }
+
+            reportes = await ReportarService.ObtenerMisReportes(usuarioActual.UsuarioId);
+            AplicarFiltros();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        reportesFiltrados = reportes.Where(r =>
+        {
+            var cumpleEstado = filtroEstado == "todos" ||
+                (filtroEstado == "pendiente" && r.Estado == EstadoReporte.Pendiente) ||
+                (filtroEstado == "revisado" && r.Estado == EstadoReporte.Revisado) ||
+                (filtroEstado == "resuelto" && r.Estado == EstadoReporte.Resuelto) ||
+                (filtroEstado == "desestimado" && r.Estado == EstadoReporte.Desestimado);
+
+            var cumpleTipo = filtroTipo == "todos" ||
+                (filtroTipo == "usuario" && r.Tipo == TipoReporte.Usuario) ||
+                (filtroTipo == "prenda" && r.Tipo == TipoReporte.Prenda);
+
+            return cumpleEstado && cumpleTipo;
+        })
+        .OrderByDescending(r => r.FechaCreacion)
+        .ToList();
+    }
+
+    private void LimpiarFiltros()
+    {
+        filtroEstado = "todos";
+        filtroTipo = "todos";
+        AplicarFiltros();
+    }
+
+    private void VolverAtras()
+    {
+        NavigationManager.NavigateTo("/explorar");
+    }
+
+    private string GetIniciales(string? nombre)
+    {
+        if (string.IsNullOrEmpty(nombre)) return "?";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length >= 2)
+            return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+        return nombre.Length >= 2 ? nombre[..2].ToUpper() : nombre.ToUpper();
+    }
+
+    private string GetTipoBadgeClass(TipoReporte tipo)
+    {
+        return tipo switch
+        {
+            TipoReporte.Usuario => "bg-info",
+            TipoReporte.Prenda => "bg-amber-600",
+            _ => "bg-stone-600"
+        };
+    }
+
+    private string GetTipoIcon(TipoReporte tipo)
+    {
+        return tipo switch
+        {
+            TipoReporte.Usuario => "bi-person",
+            TipoReporte.Prenda => "bi-bag",
+            _ => "bi-flag"
+        };
+    }
+
+    private string GetTipoTexto(TipoReporte tipo)
+    {
+        return tipo switch
+        {
+            TipoReporte.Usuario => "usuario",
+            TipoReporte.Prenda => "prenda",
+            _ => "elemento"
+        };
+    }
+
+    private string GetEstadoBadgeClass(EstadoReporte estado)
+    {
+        return estado switch
+        {
+            EstadoReporte.Pendiente => "bg-warning text-dark",
+            EstadoReporte.Revisado => "bg-info text-white",
+            EstadoReporte.Resuelto => "bg-success text-white",
+            EstadoReporte.Desestimado => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+
+    private string GetEstadoTexto(EstadoReporte estado)
+    {
+        return estado switch
+        {
+            EstadoReporte.Pendiente => "Pendiente",
+            EstadoReporte.Revisado => "En revision",
+            EstadoReporte.Resuelto => "Resuelto",
+            EstadoReporte.Desestimado => "Desestimado",
+            _ => "Desconocido"
+        };
+    }
+
+    private string FormatearFecha(DateTime fecha)
+    {
+        var diferencia = DateTime.Now - fecha;
+        if (diferencia.TotalMinutes < 60)
+            return $"Hace {(int)diferencia.TotalMinutes} min";
+        if (diferencia.TotalHours < 24)
+            return $"Hace {(int)diferencia.TotalHours} horas";
+        if (diferencia.TotalDays < 7)
+            return $"Hace {(int)diferencia.TotalDays} dias";
+        return fecha.ToString("dd/MM/yyyy HH:mm");
+    }
+}
