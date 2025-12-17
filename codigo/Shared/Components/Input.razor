@@ -1,0 +1,27 @@
+@namespace TruequeTextil.Shared.Components.UI
+
+<input id="@Id" name="@Name" type="@InputType" placeholder="@Placeholder"
+    class="form-control @Class"
+    value="@Value" @oninput="OnInputChanged" @attributes="AdditionalAttributes" />
+
+@code {
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+
+    [Parameter] public string Class { get; set; } = "";
+    [Parameter] public string InputType { get; set; } = "text";
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public IDictionary<string, object?> AdditionalAttributes { get; set; }
+    = new Dictionary<string, object?>();
+
+    private async Task OnInputChanged(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

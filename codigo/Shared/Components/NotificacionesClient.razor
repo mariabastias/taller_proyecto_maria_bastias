@@ -1,0 +1,102 @@
+@implements IAsyncDisposable
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@using Microsoft.AspNetCore.SignalR.Client
+@using System.Security.Claims
+@inject IHttpContextAccessor HttpContextAccessor
+
+@* RF-10: Cliente SignalR para notificaciones en tiempo real *@
+
+@code {
+    [Parameter]
+    public EventCallback<NotificacionRecibida> OnNotificacionRecibida { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnContadorActualizado { get; set; }
+
+    private HubConnection? _hubConnection;
+    private int? _usuarioId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = HttpContextAccessor.HttpContext?.User;
+        var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
+        {
+            _usuarioId = userId;
+            await IniciarConexion();
+        }
+    }
+
+    private async Task IniciarConexion()
+    {
+        try
+        {
+            var hubUrl = NavigationManager.ToAbsoluteUri("/notificacioneshub");
+
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl(hubUrl)
+                .WithAutomaticReconnect()
+                .Build();
+
+            // Escuchar notificaciones entrantes
+            _hubConnection.On<NotificacionRecibida>("RecibirNotificacion", async (notificacion) =>
+            {
+                await OnNotificacionRecibida.InvokeAsync(notificacion);
+                await InvokeAsync(StateHasChanged);
+            });
+
+            // Escuchar actualizaciones de contador
+            _hubConnection.On<int>("ActualizarContador", async (count) =>
+            {
+                await OnContadorActualizado.InvokeAsync(count);
+                await InvokeAsync(StateHasChanged);
+            });
+
+            await _hubConnection.StartAsync();
+        }
+        catch (Exception)
+        {
+            // Silently fail - notifications will still work via polling
+        }
+    }
+
+    public bool EstaConectado => _hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            try
+            {
+                if (_hubConnection.State == HubConnectionState.Connected)
+                {
+                    await _hubConnection.StopAsync();
+                }
+            }
+            catch
+            {
+                // En Dispose no se propagan errores
+            }
+            finally
+            {
+                await _hubConnection.DisposeAsync();
+                _hubConnection = null;
+            }
+        }
+    }
+
+
+
+    // DTO para notificacion recibida
+    public class NotificacionRecibida
+    {
+        public int NotificacionId { get; set; }
+        public string Titulo { get; set; } = string.Empty;
+        public string Mensaje { get; set; } = string.Empty;
+        public string Tipo { get; set; } = string.Empty;
+        public int? ReferenciaId { get; set; }
+        public DateTime Fecha { get; set; }
+    }
+}
