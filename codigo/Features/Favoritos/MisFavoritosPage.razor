@@ -1,0 +1,261 @@
+@page "/favoritos"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.Favoritos.Interfaces
+@using TruequeTextil.Features.Explorar.Interfaces
+
+<div class="min-vh-100 bg-stone-50">
+    <!-- Header -->
+    <div class="bg-white border-bottom border-stone-200 sticky-top">
+        <div class="container" style="max-width: 1152px;">
+            <div class="p-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-heart-fill text-danger fs-4"></i>
+                        <h1 class="h4 fw-semibold text-stone-900 mb-0">Mis Favoritos</h1>
+                    </div>
+                    @if (resultado.TotalCount > 0)
+                    {
+                        <span class="badge bg-stone-100 text-stone-700 rounded-pill px-3 py-2">
+                            @resultado.TotalCount @(resultado.TotalCount == 1 ? "prenda" : "prendas")
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container" style="max-width: 1152px;">
+        <div class="p-4">
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-amber-600" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            }
+            else if (resultado.Items.Any())
+            {
+                <!-- Grid de prendas favoritas -->
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                    @foreach (var prenda in resultado.Items)
+                    {
+                        <div class="col">
+                            <div class="card border border-stone-200 rounded-4 h-100 hover-shadow-lg hover-border-amber">
+                                <!-- Imagen -->
+                                <div class="position-relative" style="padding-top: 100%;">
+                                    @if (!string.IsNullOrEmpty(prenda.ImagenPrincipal))
+                                    {
+                                        <img src="@prenda.ImagenPrincipal" alt="@prenda.TituloPublicacion"
+                                            class="position-absolute top-0 start-0 w-100 h-100 rounded-top-4 object-fit-cover" />
+                                    }
+                                    else
+                                    {
+                                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-gradient d-flex align-items-center justify-content-center rounded-top-4" style="background: linear-gradient(135deg, #f5f5f4 0%, #fef3c7 100%);">
+                                            <i class="bi bi-image display-4 text-stone-400"></i>
+                                        </div>
+                                    }
+
+                                    <!-- Boton quitar favorito -->
+                                    <button @onclick="() => QuitarFavorito(prenda.PrendaId)" @onclick:stopPropagation="true"
+                                        class="position-absolute top-0 end-0 m-2 btn btn-light rounded-circle p-2 py-1 shadow-sm"
+                                        title="Quitar de favoritos">
+                                        <i class="bi bi-heart-fill text-danger"></i>
+                                    </button>
+
+                                    <!-- Indicador de no disponible -->
+                                    @if (!prenda.Disponible)
+                                    {
+                                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center rounded-top-4">
+                                            <span class="badge bg-secondary px-3 py-2">No disponible</span>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Contenido -->
+                                <div class="card-body p-3 cursor-pointer" @onclick="() => VerDetallePrenda(prenda.PrendaId)">
+                                    <h3 class="card-title text-stone-900 fw-medium mb-2 text-truncate small">@prenda.TituloPublicacion</h3>
+
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <span class="badge bg-stone-100 text-stone-700 rounded-pill small">@prenda.Tipo</span>
+                                        <span class="badge bg-stone-100 text-stone-700 rounded-pill small">@prenda.Talla</span>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(prenda.Ubicacion))
+                                    {
+                                        <div class="d-flex align-items-center gap-1 small text-stone-600 mb-2">
+                                            <i class="bi bi-geo-alt-fill"></i>
+                                            <span>@prenda.Ubicacion</span>
+                                        </div>
+                                    }
+
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span class="badge @(prenda.Disponible ? "bg-success-subtle text-success-emphasis" : "bg-secondary-subtle text-secondary-emphasis") rounded-pill px-2 py-1 small">
+                                            @prenda.Estado
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Paginacion -->
+                @if (resultado.TotalPaginas > 1)
+                {
+                    <nav class="d-flex justify-content-center align-items-center gap-2 mt-5" aria-label="Paginacion">
+                        <button @onclick="PaginaAnterior"
+                            class="btn btn-outline-secondary rounded-3"
+                            disabled="@(!resultado.TienePaginaAnterior)">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </button>
+
+                        @for (int i = GetPaginaInicio(); i <= GetPaginaFin(); i++)
+                        {
+                            var pag = i;
+                            <button @onclick="() => IrAPagina(pag)"
+                                class="btn rounded-3 @(pag == resultado.PaginaActual ? "btn-primary text-white" : "btn-outline-secondary")">
+                                @pag
+                            </button>
+                        }
+
+                        <button @onclick="PaginaSiguiente"
+                            class="btn btn-outline-secondary rounded-3"
+                            disabled="@(!resultado.TienePaginaSiguiente)">
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </nav>
+
+                    <div class="text-center mt-3">
+                        <span class="small text-stone-500">
+                            Pagina @resultado.PaginaActual de @resultado.TotalPaginas
+                            (@resultado.TotalCount favoritos)
+                        </span>
+                    </div>
+                }
+            }
+            else
+            {
+                <!-- Estado vacio -->
+                <div class="card border-stone-200 rounded-4 shadow text-center">
+                    <div class="card-body p-5">
+                        <div class="bg-stone-100 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 5rem; height: 5rem;">
+                            <i class="bi bi-heart display-5 text-stone-400"></i>
+                        </div>
+                        <h3 class="text-stone-900 fw-medium mb-2">No tienes favoritos aun</h3>
+                        <p class="text-stone-600 mb-4">
+                            Explora prendas y guarda las que te gusten para verlas mas tarde.
+                        </p>
+                        <button @onclick="IrAExplorar" class="btn btn-primary text-white rounded-3 px-4">
+                            <i class="bi bi-search me-2"></i>Explorar prendas
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <!-- Mensaje de sostenibilidad -->
+            @if (resultado.Items.Any())
+            {
+                <div class="mt-5 text-center">
+                    <p class="small text-stone-500 fst-italic mb-0">
+                        Guarda tus prendas favoritas y contribuye a una moda mas sostenible.
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Espaciado para navegacion movil -->
+    <div class="d-md-none" style="height: 5rem;"></div>
+</div>
+
+@code {
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private IFavoritosService FavoritosService { get; set; } = default!;
+    [Inject] private AutenticacionService AutenticacionService { get; set; } = default!;
+
+    private PaginacionResultado<Prenda> resultado = new(
+        Items: new List<Prenda>(),
+        TotalCount: 0,
+        PaginaActual: 1,
+        TotalPaginas: 0,
+        TienePaginaAnterior: false,
+        TienePaginaSiguiente: false
+    );
+
+    private bool cargando = true;
+    private int paginaActual = 1;
+    private int usuarioId = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var usuario = await AutenticacionService.GetCurrentUser();
+        if (usuario == null)
+        {
+            NavigationManager.NavigateTo("/login");
+            return;
+        }
+
+        usuarioId = usuario.UsuarioId;
+        await CargarFavoritos();
+    }
+
+    private async Task CargarFavoritos()
+    {
+        cargando = true;
+        resultado = await FavoritosService.ObtenerFavoritos(usuarioId, paginaActual);
+        cargando = false;
+    }
+
+    private async Task QuitarFavorito(int prendaId)
+    {
+        await FavoritosService.QuitarFavorito(usuarioId, prendaId);
+        await CargarFavoritos();
+    }
+
+    private async Task IrAPagina(int pagina)
+    {
+        if (pagina < 1 || pagina > resultado.TotalPaginas) return;
+        paginaActual = pagina;
+        await CargarFavoritos();
+    }
+
+    private async Task PaginaAnterior()
+    {
+        if (resultado.TienePaginaAnterior)
+        {
+            await IrAPagina(resultado.PaginaActual - 1);
+        }
+    }
+
+    private async Task PaginaSiguiente()
+    {
+        if (resultado.TienePaginaSiguiente)
+        {
+            await IrAPagina(resultado.PaginaActual + 1);
+        }
+    }
+
+    private int GetPaginaInicio()
+    {
+        var inicio = Math.Max(1, resultado.PaginaActual - 2);
+        return Math.Min(inicio, Math.Max(1, resultado.TotalPaginas - 4));
+    }
+
+    private int GetPaginaFin()
+    {
+        return Math.Min(resultado.TotalPaginas, GetPaginaInicio() + 4);
+    }
+
+    private void VerDetallePrenda(int id)
+    {
+        NavigationManager.NavigateTo($"/detalle-prenda/{id}");
+    }
+
+    private void IrAExplorar()
+    {
+        NavigationManager.NavigateTo("/explorar");
+    }
+}
