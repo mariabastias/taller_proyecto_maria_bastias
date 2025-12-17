@@ -1,0 +1,650 @@
+@rendermode InteractiveServer
+@using TruequeTextil.Features.Admin.Interfaces
+@using TruequeTextil.Shared.Models
+@inject IAdminService AdminService
+@inject TruequeTextil.Shared.Services.CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+
+<div>
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="bg-amber-600 rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
+                <i class="bi bi-people text-white"></i>
+            </div>
+            <div>
+                <h1 class="text-dark fs-2 fw-semibold mb-0">Gestion de Usuarios</h1>
+                <p class="text-muted small mb-0">Administra los usuarios de la plataforma</p>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <div class="position-relative">
+                <input type="text" placeholder="Buscar usuarios..." @bind="busqueda" @bind:event="oninput" @bind:after="AplicarFiltros"
+                    class="form-control ps-5" style="border-radius: 0.5rem;" />
+                <i class="bi bi-search position-absolute text-muted" style="left: 0.75rem; top: 50%; transform: translateY(-50%);"></i>
+            </div>
+
+            <select class="form-select" style="border-radius: 0.5rem;" @bind="filtroEstado" @bind:after="AplicarFiltros">
+                <option value="todos">Todos los estados</option>
+                <option value="activo">Activo</option>
+                <option value="suspendido">Suspendido</option>
+                <option value="inactivo">Inactivo</option>
+            </select>
+        </div>
+    </div>
+
+    @if (cargando)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-amber-600" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Tabla de usuarios -->
+        <div class="card bg-white border rounded-3 overflow-hidden shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light border-bottom">
+                        <tr>
+                            <th class="p-3 text-muted fw-normal small">Usuario</th>
+                            <th class="p-3 text-muted fw-normal small">Email</th>
+                            <th class="p-3 text-muted fw-normal small">Estado</th>
+                            <th class="p-3 text-muted fw-normal small">Reputación</th>
+                            <th class="p-3 text-muted fw-normal small">Registro</th>
+                            <th class="p-3 text-muted fw-normal small text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!usuariosFiltrados.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    No se encontraron usuarios
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var usuario in usuariosFiltrados)
+                            {
+                                <tr>
+                                    <td class="p-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white small"
+                                                  style="width: 2.5rem; height: 2.5rem;">
+                                                @(usuario.Nombre?.Length > 0 ? usuario.Nombre[0].ToString().ToUpper() : "?")
+                                            </div>
+                                            <div>
+                                                <span class="text-dark d-block">@usuario.Nombre @usuario.Apellido</span>
+                                                <span class="text-muted small">ID: @usuario.UsuarioId</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 text-muted">@usuario.CorreoElectronico</td>
+                                    <td class="p-3">
+                                        <span class="@GetEstadoClass(usuario.EstadoUsuario) px-2 py-1 rounded-pill small">
+                                            @GetEstadoNombre(usuario.EstadoUsuario)
+                                        </span>
+                                    </td>
+                                    <td class="p-3">
+                                        <div class="d-flex align-items-center gap-1">
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                            <span class="text-muted">@usuario.ReputacionPromedio.ToString("F1")</span>
+                                        </div>
+                                    </td>
+                                    <td class="p-3 text-muted">@usuario.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                    <td class="p-3 text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button @onclick="() => VerDetalleUsuario(usuario.UsuarioId)"
+                                                class="btn btn-sm btn-outline-secondary p-2" style="border-radius: 0.5rem;"
+                                                title="Ver detalle">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                            @if (usuario.Rol == "usuario")
+                                            {
+                                                <button @onclick="() => AbrirModalCambiarRol(usuario)"
+                                                    class="btn btn-sm btn-outline-primary p-2" style="border-radius: 0.5rem;"
+                                                    title="Promover a admin">
+                                                    <i class="bi bi-shield-check"></i>
+                                                </button>
+                                            }
+                                            @if (usuario.EstadoUsuario == "activo")
+                                            {
+                                                <button @onclick="() => AbrirModalSuspender(usuario)"
+                                                    class="btn btn-sm btn-danger p-2" style="border-radius: 0.5rem;"
+                                                    title="Suspender usuario">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            }
+                                            else if (usuario.EstadoUsuario == "suspendido")
+                                            {
+                                                <button @onclick="() => ReactivarUsuario(usuario)"
+                                                    class="btn btn-sm btn-success p-2" style="border-radius: 0.5rem;"
+                                                    title="Reactivar usuario">
+                                                    <i class="bi bi-check-circle"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Paginacion -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div class="text-muted small">
+                Mostrando @((paginaActual - 1) * porPagina + 1)-@Math.Min(paginaActual * porPagina, totalUsuarios) de @totalUsuarios usuarios
+            </div>
+
+            @if (totalPaginas > 1)
+            {
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => CambiarPagina(paginaActual - 1)" disabled="@(paginaActual == 1)">Anterior</button>
+                        </li>
+                        @for (int i = 1; i <= Math.Min(5, totalPaginas); i++)
+                        {
+                            var pagina = i;
+                            <li class="page-item @(paginaActual == pagina ? "active" : "")">
+                                <button class="page-link" @onclick="() => CambiarPagina(pagina)">@pagina</button>
+                            </li>
+                        }
+                        <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                            <button class="page-link" @onclick="() => CambiarPagina(paginaActual + 1)" disabled="@(paginaActual == totalPaginas)">Siguiente</button>
+                        </li>
+                    </ul>
+                </nav>
+            }
+        </div>
+    }
+
+    <!-- Modal de detalle de usuario -->
+    @if (mostrarModalDetalle && usuarioDetalleSeleccionado != null)
+    {
+        <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-white border rounded-3">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-dark">Detalle de Usuario</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModalDetalle"></button>
+                    </div>
+
+                    <div class="modal-body p-4">
+                        <!-- Informacion basica -->
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white"
+                                  style="width: 4rem; height: 4rem; font-size: 1.5rem;">
+                                @(usuarioDetalleSeleccionado.Nombre?.Length > 0 ? usuarioDetalleSeleccionado.Nombre[0].ToString().ToUpper() : "?")
+                            </div>
+                            <div>
+                                <h3 class="text-dark h5 mb-1">@usuarioDetalleSeleccionado.Nombre @usuarioDetalleSeleccionado.Apellido</h3>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="@GetEstadoClass(usuarioDetalleSeleccionado.EstadoUsuario) px-2 py-1 rounded-pill small">
+                                        @GetEstadoNombre(usuarioDetalleSeleccionado.EstadoUsuario)
+                                    </span>
+                                    <span class="badge bg-secondary">@usuarioDetalleSeleccionado.Rol</span>
+                                    @if (usuarioDetalleSeleccionado.CuentaVerificada)
+                                    {
+                                        <i class="bi bi-patch-check-fill text-success" title="Verificado"></i>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalles -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-1">Correo electronico</p>
+                                <p class="text-dark mb-0">@usuarioDetalleSeleccionado.CorreoElectronico</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-1">Telefono</p>
+                                <p class="text-dark mb-0">@(string.IsNullOrEmpty(usuarioDetalleSeleccionado.Telefono) ? "No registrado" : usuarioDetalleSeleccionado.Telefono)</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-1">Ubicacion</p>
+                                <p class="text-dark mb-0">@(usuarioDetalleSeleccionado.Comuna?.NombreComuna ?? "No registrada"), @(usuarioDetalleSeleccionado.Comuna?.Region?.NombreRegion ?? "")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-1">Fecha de registro</p>
+                                <p class="text-dark mb-0">@usuarioDetalleSeleccionado.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-1">Ultimo acceso</p>
+                                <p class="text-dark mb-0">@(usuarioDetalleSeleccionado.FechaUltimoLogin?.ToString("dd/MM/yyyy HH:mm") ?? "Nunca")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-1">Reputacion</p>
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <span class="text-dark fw-bold">@usuarioDetalleSeleccionado.ReputacionPromedio.ToString("F2")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Estadisticas -->
+                        <div class="bg-light rounded-3 p-3 mb-3">
+                            <h6 class="text-dark mb-3">Estadisticas de actividad</h6>
+                            <div class="row g-3">
+                                <div class="col-4 text-center">
+                                    <p class="text-muted small mb-1">Prendas publicadas</p>
+                                    <p class="text-dark fs-5 fw-bold mb-0">-</p>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <p class="text-muted small mb-1">Trueques completados</p>
+                                    <p class="text-dark fs-5 fw-bold mb-0">-</p>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <p class="text-muted small mb-1">Evaluaciones</p>
+                                    <p class="text-dark fs-5 fw-bold mb-0">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        @if (usuarioDetalleSeleccionado.Rol == "usuario")
+                        {
+                            <button @onclick="() => AbrirModalCambiarRol(usuarioDetalleSeleccionado)" class="btn btn-primary">
+                                <i class="bi bi-shield-check me-1"></i> Promover a Admin
+                            </button>
+                        }
+                        @if (usuarioDetalleSeleccionado.EstadoUsuario == "activo")
+                        {
+                            <button @onclick="() => AbrirModalSuspender(usuarioDetalleSeleccionado)" class="btn btn-danger">
+                                <i class="bi bi-x-circle me-1"></i> Suspender
+                            </button>
+                        }
+                        else if (usuarioDetalleSeleccionado.EstadoUsuario == "suspendido")
+                        {
+                            <button @onclick="() => ReactivarUsuario(usuarioDetalleSeleccionado)" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i> Reactivar
+                            </button>
+                        }
+                        <button @onclick="CerrarModalDetalle" class="btn btn-secondary">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Modal de cambio de rol -->
+    @if (mostrarModalCambiarRol && usuarioACambiarRol != null)
+    {
+        <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-white border rounded-3">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-dark">Cambiar Rol de Usuario</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModalCambiarRol"></button>
+                    </div>
+
+                    <div class="modal-body p-3">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Esta accion cambiara el rol del usuario y le otorgara permisos de administrador.
+                        </div>
+
+                        <p class="text-dark mb-3">
+                            Estas a punto de promover a: <strong>@usuarioACambiarRol.Nombre @usuarioACambiarRol.Apellido</strong>
+                        </p>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Nuevo rol</label>
+                            <select @bind="nuevoRol" class="form-select">
+                                <option value="administrador">Administrador</option>
+                                <option value="usuario">Usuario</option>
+                            </select>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(mensajeErrorRol))
+                        {
+                            <div class="alert alert-danger small">@mensajeErrorRol</div>
+                        }
+                        @if (!string.IsNullOrEmpty(mensajeExitoRol))
+                        {
+                            <div class="alert alert-success small">@mensajeExitoRol</div>
+                        }
+                    </div>
+
+                    <div class="modal-footer">
+                        <button @onclick="CerrarModalCambiarRol" class="btn btn-secondary">
+                            Cancelar
+                        </button>
+                        <button @onclick="ConfirmarCambioRol" class="btn btn-primary" disabled="@procesandoRol">
+                            @if (procesandoRol)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            <i class="bi bi-shield-check me-1"></i> Confirmar cambio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Modal de suspension -->
+    @if (mostrarModalSuspender && usuarioASuspender != null)
+    {
+        <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-white border rounded-3">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-dark">Suspender Usuario</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModalSuspender"></button>
+                    </div>
+
+                    <div class="modal-body p-3">
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Esta accion suspendera al usuario y limitara su acceso a la plataforma.
+                        </div>
+
+                        <p class="text-dark mb-3">
+                            Estas a punto de suspender: <strong>@usuarioASuspender.Nombre @usuarioASuspender.Apellido</strong>
+                        </p>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Motivo de suspension *</label>
+                            <textarea @bind="motivoSuspension" class="form-control"
+                                rows="3" placeholder="Ingresa el motivo de la suspension..."></textarea>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(mensajeError))
+                        {
+                            <div class="alert alert-danger small">@mensajeError</div>
+                        }
+                        @if (!string.IsNullOrEmpty(mensajeExito))
+                        {
+                            <div class="alert alert-success small">@mensajeExito</div>
+                        }
+                    </div>
+
+                    <div class="modal-footer">
+                        <button @onclick="CerrarModalSuspender" class="btn btn-secondary">
+                            Cancelar
+                        </button>
+                        <button @onclick="ConfirmarSuspension" class="btn btn-danger" disabled="@procesando">
+                            @if (procesando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            <i class="bi bi-x-circle me-1"></i> Confirmar suspension
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool cargando = true;
+    private bool procesando = false;
+    private bool procesandoRol = false;
+    private string busqueda = "";
+    private string filtroEstado = "todos";
+    private int paginaActual = 1;
+    private int porPagina = 10;
+    private int totalUsuarios = 0;
+    private int totalPaginas = 0;
+    private int adminId = 0;
+
+    private string motivoSuspension = "";
+    private string mensajeError = "";
+    private string mensajeExito = "";
+    private string mensajeErrorRol = "";
+    private string mensajeExitoRol = "";
+    private string nuevoRol = "administrador";
+
+    private List<Usuario> usuarios = new();
+    private List<Usuario> usuariosFiltrados = new();
+    private Usuario? usuarioSeleccionado;
+    private Usuario? usuarioASuspender;
+    private Usuario? usuarioACambiarRol;
+    private Usuario? usuarioDetalleSeleccionado;
+    private bool mostrarModalSuspender = false;
+    private bool mostrarModalCambiarRol = false;
+    private bool mostrarModalDetalle = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var usuario = await AuthStateProvider.GetCurrentUserAsync();
+        if (usuario == null || (usuario.Rol != "admin" && usuario.Rol != "administrador"))
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+        adminId = usuario.UsuarioId;
+
+        await CargarUsuarios();
+    }
+
+    private async Task CargarUsuarios()
+    {
+        cargando = true;
+        try
+        {
+            var (items, total, paginas) = await AdminService.ObtenerUsuariosPaginados(busqueda, filtroEstado, paginaActual, porPagina);
+
+            usuarios = items;
+            usuariosFiltrados = usuarios;
+            totalUsuarios = total;
+            totalPaginas = paginas;
+        }
+        catch (Exception)
+        {
+            usuarios = new List<Usuario>();
+            usuariosFiltrados = new List<Usuario>();
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        paginaActual = 1;
+        _ = CargarUsuarios();
+    }
+
+    private async Task CambiarPagina(int pagina)
+    {
+        if (pagina < 1 || pagina > totalPaginas) return;
+        paginaActual = pagina;
+        await CargarUsuarios();
+    }
+
+    private string GetEstadoClass(string estado)
+    {
+        return estado.ToLower() switch
+        {
+            "activo" => "bg-success-subtle text-success",
+            "suspendido" => "bg-danger-subtle text-danger",
+            "inactivo" => "bg-secondary-subtle text-secondary",
+            _ => "bg-muted-subtle text-muted"
+        };
+    }
+
+    private string GetEstadoNombre(string estado)
+    {
+        return estado switch
+        {
+            "activo" => "Activo",
+            "suspendido" => "Suspendido",
+            "inactivo" => "Inactivo",
+            _ => "Desconocido"
+        };
+    }
+
+    private async Task VerDetalleUsuario(int usuarioId)
+    {
+        cargando = true;
+        try
+        {
+            usuarioDetalleSeleccionado = await AdminService.ObtenerDetalleUsuario(usuarioId);
+            if (usuarioDetalleSeleccionado != null)
+            {
+                mostrarModalDetalle = true;
+            }
+        }
+        catch (Exception)
+        {
+            // Error al cargar detalle
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void CerrarModalDetalle()
+    {
+        mostrarModalDetalle = false;
+        usuarioDetalleSeleccionado = null;
+    }
+
+    private void AbrirModalCambiarRol(Usuario usuario)
+    {
+        usuarioACambiarRol = usuario;
+        nuevoRol = usuario.Rol == "usuario" ? "administrador" : "usuario";
+        mensajeErrorRol = "";
+        mensajeExitoRol = "";
+        mostrarModalCambiarRol = true;
+        mostrarModalDetalle = false;
+    }
+
+    private void CerrarModalCambiarRol()
+    {
+        mostrarModalCambiarRol = false;
+        usuarioACambiarRol = null;
+        mensajeErrorRol = "";
+        mensajeExitoRol = "";
+    }
+
+    private async Task ConfirmarCambioRol()
+    {
+        if (usuarioACambiarRol == null) return;
+
+        procesandoRol = true;
+        mensajeErrorRol = "";
+
+        try
+        {
+            var (exito, mensaje) = await AdminService.CambiarRolUsuario(usuarioACambiarRol.UsuarioId, adminId, nuevoRol);
+
+            if (exito)
+            {
+                mensajeExitoRol = mensaje;
+                await Task.Delay(1500);
+                CerrarModalCambiarRol();
+                await CargarUsuarios();
+            }
+            else
+            {
+                mensajeErrorRol = mensaje;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeErrorRol = "Error: " + ex.Message;
+        }
+        finally
+        {
+            procesandoRol = false;
+        }
+    }
+
+    private void AbrirModalSuspender(Usuario usuario)
+    {
+        usuarioASuspender = usuario;
+        motivoSuspension = "";
+        mensajeError = "";
+        mensajeExito = "";
+        mostrarModalSuspender = true;
+    }
+
+    private void CerrarModalSuspender()
+    {
+        mostrarModalSuspender = false;
+        usuarioASuspender = null;
+        motivoSuspension = "";
+        mensajeError = "";
+        mensajeExito = "";
+    }
+
+    private async Task ConfirmarSuspension()
+    {
+        if (usuarioASuspender == null) return;
+
+        if (string.IsNullOrWhiteSpace(motivoSuspension))
+        {
+            mensajeError = "Debe proporcionar un motivo para suspender al usuario.";
+            return;
+        }
+
+        procesando = true;
+        mensajeError = "";
+
+        try
+        {
+            var (exito, mensaje) = await AdminService.SuspenderUsuario(usuarioASuspender.UsuarioId, adminId, motivoSuspension);
+
+            if (exito)
+            {
+                mensajeExito = mensaje;
+                await Task.Delay(1500);
+                CerrarModalSuspender();
+                await CargarUsuarios();
+            }
+            else
+            {
+                mensajeError = mensaje;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "Error: " + ex.Message;
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+
+    private async Task ReactivarUsuario(Usuario usuario)
+    {
+        procesando = true;
+
+        try
+        {
+            var (exito, mensaje) = await AdminService.ReactivarUsuario(usuario.UsuarioId, adminId);
+
+            if (exito)
+            {
+                await CargarUsuarios();
+            }
+        }
+        catch (Exception)
+        {
+            // Manejar error si es necesario
+        }
+        finally
+        {
+            procesando = false;
+        }
+    }
+}

@@ -1,0 +1,117 @@
+@page "/admin"
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "administrador")]
+@using Microsoft.AspNetCore.Authorization
+@using TruequeTextil.Features.Admin.Components
+
+<div class="min-vh-100 bg-light">
+    <!-- Sidebar -->
+    <div class="position-fixed top-0 start-0 bottom-0 bg-white text-dark p-3 overflow-auto border-end" style="width: 16rem;">
+        <div class="mb-3">
+            <div class="bg-amber-600 rounded-3 d-flex align-items-center justify-content-center mb-3" style="width: 3rem; height: 3rem;">
+                <i class="bi bi-arrow-repeat fs-4"></i>
+            </div>
+            <h2 class="text-dark mb-1 h5">Panel Admin</h2>
+            <p class="small text-muted">Trueque Textil Digital</p>
+        </div>
+
+        <nav class="d-flex flex-column gap-1">
+            <button @onclick="@(() => CambiarSeccion("dashboard"))"
+                class="@(seccionActual == "dashboard" ? "bg-light" : "") btn btn-link text-dark text-start text-decoration-none px-3 py-2 rounded-2 d-flex align-items-center gap-2"
+                style="border: none;">
+                <i class="bi bi-bar-chart"></i>
+                <span>Dashboard</span>
+            </button>
+
+            <button @onclick="@(() => CambiarSeccion("usuarios"))"
+                class="@(seccionActual == "usuarios" ? "bg-light" : "") btn btn-link text-dark text-start text-decoration-none px-3 py-2 rounded-2 d-flex align-items-center gap-2"
+                style="border: none;">
+                <i class="bi bi-people"></i>
+                <span>Usuarios</span>
+            </button>
+
+            <button @onclick="@(() => CambiarSeccion("prendas"))"
+                class="@(seccionActual == "prendas" ? "bg-light" : "") btn btn-link text-dark text-start text-decoration-none px-3 py-2 rounded-2 d-flex align-items-center gap-2"
+                style="border: none;">
+                <i class="bi bi-bag"></i>
+                <span>Prendas</span>
+            </button>
+
+            <button @onclick="@(() => CambiarSeccion("reportes"))"
+                class="@(seccionActual == "reportes" ? "bg-light" : "") btn btn-link text-dark text-start text-decoration-none px-3 py-2 rounded-2 d-flex align-items-center gap-2"
+                style="border: none;">
+                <i class="bi bi-flag"></i>
+                <span>Reportes</span>
+            </button>
+
+            <button @onclick="@(() => CambiarSeccion("configuracion"))"
+                class="@(seccionActual == "configuracion" ? "bg-light" : "") btn btn-link text-dark text-start text-decoration-none px-3 py-2 rounded-2 d-flex align-items-center gap-2"
+                style="border: none;">
+                <i class="bi bi-gear"></i>
+                <span>Configuración</span>
+            </button>
+        </nav>
+
+        <div class="position-absolute bottom-0 start-0 end-0 p-3">
+            <button @onclick="@(() => NavigationManager.NavigateTo("/explorar"))"
+                class="w-100 btn btn-link text-muted text-start text-decoration-none px-3 py-2 rounded-2 d-flex align-items-center gap-2"
+                style="border: none;">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Salir del panel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="p-3" style="margin-left: 16rem;">
+        <div class="mb-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-amber-600 rounded-3 d-flex align-items-center justify-content-center" style="width: 2rem; height: 2rem;">
+                        <i class="bi bi-lock text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-dark fs-5 fw-medium mb-0">Panel Administrativo Seguro</h2>
+                        <p class="text-muted small mb-0">Acceso autorizado - Sesión protegida</p>
+                    </div>
+                </div>
+                <div class="text-muted small">
+                    Última actividad: @DateTime.Now.ToString("HH:mm")
+                </div>
+            </div>
+        </div>
+
+        @if (seccionActual == "dashboard")
+        {
+            <DashboardAdmin OnCambiarSeccion="CambiarSeccion" />
+        }
+        else if (seccionActual == "usuarios")
+        {
+            <UsuariosAdmin />
+        }
+        else if (seccionActual == "prendas")
+        {
+            <PrendasAdmin />
+        }
+        else if (seccionActual == "reportes")
+        {
+            <ReportesAdmin />
+        }
+        else if (seccionActual == "configuracion")
+        {
+            <ConfiguracionAdmin />
+        }
+    </div>
+</div>
+
+@code {
+    private string seccionActual = "dashboard";
+
+    private void CambiarSeccion(string seccion)
+    {
+        seccionActual = seccion;
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+}

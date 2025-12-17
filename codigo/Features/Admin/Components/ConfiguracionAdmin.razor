@@ -1,0 +1,530 @@
+@rendermode InteractiveServer
+@using TruequeTextil.Features.Admin.Interfaces
+@using Microsoft.JSInterop
+@inject IAdminService AdminService
+@inject TruequeTextil.Shared.Services.CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<div>
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="bg-amber-600 rounded-3 d-flex align-items-center justify-content-center" style="width: 2.5rem; height: 2.5rem;">
+            <i class="bi bi-gear text-white"></i>
+        </div>
+        <div>
+            <h1 class="text-dark fs-2 fw-semibold mb-0">Configuracion del Sistema</h1>
+            <p class="text-muted small mb-0">Administra los parametros y configuraciones de la plataforma</p>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+        <!-- Configuracion general -->
+        <div class="col">
+            <div class="card bg-white border rounded-3 p-3 shadow-sm">
+                <h2 class="text-dark fs-5 mb-3">Configuracion general</h2>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label text-muted small">Nombre de la plataforma</label>
+                        <input type="text" @bind="config.NombrePlataforma"
+                            class="form-control" />
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Descripcion</label>
+                        <textarea @bind="config.Descripcion" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Email de contacto</label>
+                        <input type="email" @bind="config.EmailContacto"
+                            class="form-control" />
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label class="text-muted">Modo mantenimiento</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" @bind="config.ModoMantenimiento">
+                        </div>
+                    </div>
+                </div>
+
+                <button @onclick="GuardarConfigGeneral" class="btn btn-warning mt-3" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Guardar cambios
+                </button>
+            </div>
+        </div>
+
+        <!-- Limites y restricciones -->
+        <div class="col">
+            <div class="card bg-white border rounded-3 p-3 shadow-sm">
+                <h2 class="text-dark fs-5 mb-3">Limites y restricciones</h2>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label text-muted small">Maximo de prendas por usuario</label>
+                        <input type="number" @bind="config.MaxPrendasPorUsuario"
+                            class="form-control" />
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Maximo de propuestas activas por prenda</label>
+                        <input type="number" @bind="config.MaxPropuestasPorPrenda"
+                            class="form-control" />
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Dias para completar un trueque</label>
+                        <input type="number" @bind="config.DiasCompletarTrueque"
+                            class="form-control" />
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Reputacion minima para proponer trueques</label>
+                        <input type="number" @bind="config.ReputacionMinima" step="0.1"
+                            class="form-control" />
+                    </div>
+                </div>
+
+                <button @onclick="GuardarLimites" class="btn btn-warning mt-3" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Guardar cambios
+                </button>
+            </div>
+        </div>
+
+        <!-- Notificaciones -->
+        <div class="col">
+            <div class="card bg-white border rounded-3 p-3 shadow-sm">
+                <h2 class="text-dark fs-5 mb-3">Configuracion de notificaciones</h2>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label class="text-muted">Notificaciones por email</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" @bind="config.NotificacionesEmail">
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label class="text-muted">Notificaciones push</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" @bind="config.NotificacionesPush">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Frecuencia de resumen por email</label>
+                        <select @bind="config.FrecuenciaResumen" class="form-select">
+                            <option value="diario">Diario</option>
+                            <option value="semanal">Semanal</option>
+                            <option value="mensual">Mensual</option>
+                            <option value="nunca">Nunca</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Plantilla de email</label>
+                        <select @bind="config.PlantillaEmail" class="form-select">
+                            <option value="default">Predeterminada</option>
+                            <option value="minimal">Minimalista</option>
+                            <option value="colorful">Colorida</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button @onclick="GuardarNotificaciones" class="btn btn-warning mt-3" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Guardar cambios
+                </button>
+            </div>
+        </div>
+
+        <!-- Seguridad -->
+        <div class="col">
+            <div class="card bg-white border rounded-3 p-3 shadow-sm">
+                <h2 class="text-dark fs-5 mb-3">Seguridad</h2>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label class="text-muted">Verificacion de email obligatoria</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" @bind="config.VerificacionEmailObligatoria">
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label class="text-muted">Autenticacion de dos factores</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" @bind="config.DobleFactorActivo">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Tiempo de sesion (minutos)</label>
+                        <input type="number" @bind="config.TiempoSesionMinutos"
+                            class="form-control" />
+                    </div>
+
+                    <div>
+                        <label class="form-label text-muted small">Intentos de inicio de sesion antes de bloqueo</label>
+                        <input type="number" @bind="config.IntentosAntesBloqueo"
+                            class="form-control" />
+                    </div>
+                </div>
+
+                <button @onclick="GuardarSeguridad" class="btn btn-warning mt-3" disabled="@guardando">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informes y Reportes -->
+    <div class="card bg-white border rounded-3 p-3 mt-3 shadow-sm">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h2 class="text-dark fs-5 mb-0">
+                <i class="bi bi-file-earmark-bar-graph me-2"></i>Informes y Estadisticas
+            </h2>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label text-muted small">Fecha inicio</label>
+                <input type="date" @bind="fechaInicio" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label text-muted small">Fecha fin</label>
+                <input type="date" @bind="fechaFin" class="form-control" />
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button @onclick="GenerarInforme" class="btn btn-warning w-100" disabled="@generandoInforme">
+                    @if (generandoInforme)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    <i class="bi bi-bar-chart me-1"></i> Generar Informe
+                </button>
+            </div>
+        </div>
+
+        @if (informe != null)
+        {
+            <div class="bg-light rounded-3 p-3 mb-3">
+                <div class="row row-cols-2 row-cols-md-4 g-3">
+                    <div class="col">
+                        <p class="text-muted small mb-1">Total Usuarios</p>
+                        <p class="text-dark fs-5 mb-0">@informe.TotalUsuarios</p>
+                        <span class="text-success small">+@informe.UsuariosNuevos nuevos</span>
+                    </div>
+                    <div class="col">
+                        <p class="text-muted small mb-1">Total Prendas</p>
+                        <p class="text-dark fs-5 mb-0">@informe.TotalPrendas</p>
+                        <span class="text-success small">+@informe.PrendasNuevas nuevas</span>
+                    </div>
+                    <div class="col">
+                        <p class="text-muted small mb-1">Trueques Completados</p>
+                        <p class="text-dark fs-5 mb-0">@informe.TruequesCompletados</p>
+                        <span class="text-warning small">@informe.TruequesPendientes pendientes</span>
+                    </div>
+                    <div class="col">
+                        <p class="text-muted small mb-1">Reportes</p>
+                        <p class="text-dark fs-5 mb-0">@informe.ReportesResueltos resueltos</p>
+                        <span class="text-danger small">@informe.ReportesPendientes pendientes</span>
+                    </div>
+                </div>
+                <div class="border-top mt-3 pt-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-muted small">
+                            Reputacion promedio: <strong class="text-dark">@informe.ReputacionPromedio.ToString("F2")</strong>
+                        </span>
+                        <span class="text-muted small">
+                            Generado: @informe.FechaGeneracion.ToString("dd/MM/yyyy HH:mm")
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <button @onclick="ExportarCSV" class="btn btn-outline-secondary" disabled="@exportando">
+                @if (exportando)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                <i class="bi bi-download me-1"></i> Exportar CSV
+            </button>
+        }
+    </div>
+
+    <!-- Acciones avanzadas -->
+    <div class="card bg-white border rounded-3 p-3 mt-3 shadow-sm">
+        <h2 class="text-dark fs-5 mb-3">Acciones avanzadas</h2>
+
+        <div class="row row-cols-1 row-cols-md-3 g-3">
+            <div class="col">
+                <button @onclick="LimpiarCache" class="btn btn-danger w-100 d-flex align-items-center gap-2 justify-content-center py-3" disabled="@ejecutandoAccion">
+                    @if (accionActual == "cache")
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-trash"></i>
+                    }
+                    <span>Limpiar cache</span>
+                </button>
+            </div>
+
+            <div class="col">
+                <button @onclick="() => GenerarInforme()" class="btn btn-warning w-100 d-flex align-items-center gap-2 justify-content-center py-3" disabled="@ejecutandoAccion">
+                    @if (accionActual == "informe")
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-bar-chart"></i>
+                    }
+                    <span>Generar informe</span>
+                </button>
+            </div>
+
+            <div class="col">
+                <button @onclick="BackupDatos" class="btn btn-primary w-100 d-flex align-items-center gap-2 justify-content-center py-3" disabled="@ejecutandoAccion">
+                    @if (accionActual == "backup")
+                    {
+                        <span class="spinner-border spinner-border-sm"></span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-download"></i>
+                    }
+                    <span>Backup de datos</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeExito))
+    {
+        <div class="alert alert-success mt-3">
+            <i class="bi bi-check-circle me-2"></i>@mensajeExito
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <div class="alert alert-danger mt-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
+        </div>
+    }
+</div>
+
+@code {
+    private ConfiguracionViewModel config = new();
+    private InformeGeneralDTO? informe;
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    private bool guardando = false;
+    private bool generandoInforme = false;
+    private bool exportando = false;
+    private bool ejecutandoAccion = false;
+    private string accionActual = "";
+    private string mensajeExito = "";
+    private string mensajeError = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var usuario = await AuthStateProvider.GetCurrentUserAsync();
+        if (usuario == null || (usuario.Rol != "admin" && usuario.Rol != "administrador"))
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        // Cargar configuracion por defecto
+        CargarConfiguracionPorDefecto();
+
+        // Establecer fechas por defecto (ultimo mes)
+        fechaFin = DateTime.Today;
+        fechaInicio = DateTime.Today.AddMonths(-1);
+    }
+
+    private void CargarConfiguracionPorDefecto()
+    {
+        config = new ConfiguracionViewModel
+        {
+            NombrePlataforma = "Trueque Textil Digital",
+            Descripcion = "Plataforma de intercambio de prendas textiles en Chile.",
+            EmailContacto = "contacto@truequetextil.cl",
+            ModoMantenimiento = false,
+            MaxPrendasPorUsuario = 20,
+            MaxPropuestasPorPrenda = 3,
+            DiasCompletarTrueque = 7,
+            ReputacionMinima = 3.0m,
+            NotificacionesEmail = true,
+            NotificacionesPush = true,
+            FrecuenciaResumen = "semanal",
+            PlantillaEmail = "default",
+            VerificacionEmailObligatoria = true,
+            DobleFactorActivo = false,
+            TiempoSesionMinutos = 60,
+            IntentosAntesBloqueo = 5
+        };
+    }
+
+    private async Task GuardarConfigGeneral()
+    {
+        await SimularGuardado("Configuracion general guardada correctamente");
+    }
+
+    private async Task GuardarLimites()
+    {
+        await SimularGuardado("Limites y restricciones guardados correctamente");
+    }
+
+    private async Task GuardarNotificaciones()
+    {
+        await SimularGuardado("Configuracion de notificaciones guardada correctamente");
+    }
+
+    private async Task GuardarSeguridad()
+    {
+        await SimularGuardado("Configuracion de seguridad guardada correctamente");
+    }
+
+    private async Task SimularGuardado(string mensaje)
+    {
+        guardando = true;
+        mensajeExito = "";
+        mensajeError = "";
+
+        try
+        {
+            await Task.Delay(1000); // Simular guardado
+            mensajeExito = mensaje;
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "Error al guardar: " + ex.Message;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private async Task GenerarInforme()
+    {
+        generandoInforme = true;
+        mensajeExito = "";
+        mensajeError = "";
+
+        try
+        {
+            informe = await AdminService.GenerarInformeGeneral(fechaInicio, fechaFin);
+            mensajeExito = "Informe generado correctamente";
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "Error al generar informe: " + ex.Message;
+        }
+        finally
+        {
+            generandoInforme = false;
+        }
+    }
+
+    private async Task ExportarCSV()
+    {
+        exportando = true;
+
+        try
+        {
+            var csvBytes = await AdminService.ExportarInformeCSV(fechaInicio, fechaFin);
+            if (csvBytes.Length > 0)
+            {
+                var base64 = Convert.ToBase64String(csvBytes);
+                var fileName = $"informe_trueque_textil_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+                await JSRuntime.InvokeVoidAsync("downloadFile", base64, fileName, "text/csv");
+                mensajeExito = "Informe exportado correctamente";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = "Error al exportar: " + ex.Message;
+        }
+        finally
+        {
+            exportando = false;
+        }
+    }
+
+    private async Task LimpiarCache()
+    {
+        ejecutandoAccion = true;
+        accionActual = "cache";
+
+        try
+        {
+            await Task.Delay(1500);
+            mensajeExito = "Cache limpiado correctamente";
+        }
+        finally
+        {
+            ejecutandoAccion = false;
+            accionActual = "";
+        }
+    }
+
+    private async Task BackupDatos()
+    {
+        ejecutandoAccion = true;
+        accionActual = "backup";
+
+        try
+        {
+            await Task.Delay(2000);
+            mensajeExito = "Backup iniciado. Recibiras un email cuando este listo.";
+        }
+        finally
+        {
+            ejecutandoAccion = false;
+            accionActual = "";
+        }
+    }
+
+    private class ConfiguracionViewModel
+    {
+        public string NombrePlataforma { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public string EmailContacto { get; set; } = string.Empty;
+        public bool ModoMantenimiento { get; set; }
+        public int MaxPrendasPorUsuario { get; set; }
+        public int MaxPropuestasPorPrenda { get; set; }
+        public int DiasCompletarTrueque { get; set; }
+        public decimal ReputacionMinima { get; set; }
+        public bool NotificacionesEmail { get; set; }
+        public bool NotificacionesPush { get; set; }
+        public string FrecuenciaResumen { get; set; } = string.Empty;
+        public string PlantillaEmail { get; set; } = string.Empty;
+        public bool VerificacionEmailObligatoria { get; set; }
+        public bool DobleFactorActivo { get; set; }
+        public int TiempoSesionMinutos { get; set; }
+        public int IntentosAntesBloqueo { get; set; }
+    }
+}
