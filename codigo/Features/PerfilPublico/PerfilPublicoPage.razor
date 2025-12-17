@@ -1,0 +1,270 @@
+@page "/perfil-publico"
+@page "/perfil-publico/{usuarioId:int}"
+@rendermode InteractiveServer
+@using TruequeTextil.Features.PerfilPublico.Interfaces
+@using TruequeTextil.Shared.Models
+@using EvaluacionModel = TruequeTextil.Shared.Models.Evaluacion
+
+<div class="min-vh-100 bg-stone-50 py-4">
+    <div class="container">
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-amber-500" role="status">
+                    <span class="visually-hidden">Cargando perfil...</span>
+                </div>
+            </div>
+        }
+        else if (usuario == null)
+        {
+            <div class="text-center py-5">
+                <div class="bg-white rounded-4 shadow p-4">
+                    <i class="bi bi-person-x text-stone-400" style="font-size: 48px;"></i>
+                    <h3 class="mt-3 text-stone-600">Usuario no encontrado</h3>
+                    <p class="text-stone-500">El perfil que buscas no existe o no está disponible.</p>
+                    <button @onclick="VolverAExplorar" class="btn btn-primary mt-3">
+                        Volver a explorar
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Profile Header -->
+            <div class="bg-white rounded-4 shadow mb-4 p-4">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <img src="@(string.IsNullOrEmpty(usuario.UrlFotoPerfil) ? "/images/default-avatar.png" : usuario.UrlFotoPerfil)"
+                             class="rounded-circle border border-3 border-stone-200"
+                             style="width: 80px; height: 80px; object-fit: cover;" />
+                    </div>
+                    <div class="col">
+                        <h2 class="fs-4 fw-bold text-stone-900 mb-1">@usuario.Nombre @usuario.Apellido</h2>
+                        <p class="text-stone-600 mb-2">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            @usuario.Comuna?.NombreComuna, @usuario.Comuna?.Region?.NombreRegion
+                        </p>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-star-fill text-amber-500 me-1"></i>
+                                <span class="fw-medium">@usuario.ReputacionPromedio.ToString("0.0")</span>
+                                <span class="text-stone-500 ms-1">(@evaluaciones.Count reseñas)</span>
+                            </div>
+                            @if (esPerfilPropio)
+                            {
+                                <button @onclick="EditarPerfil" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil me-1"></i>
+                                    Editar perfil
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(usuario.Biografia))
+                {
+                    <hr class="my-4" />
+                    <div>
+                        <h5 class="fw-bold text-stone-900 mb-2">Sobre mí</h5>
+                        <p class="text-stone-700 mb-0">@usuario.Biografia</p>
+                    </div>
+                }
+            </div>
+
+            <!-- Prendas del usuario -->
+            <div class="bg-white rounded-4 shadow p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fs-5 fw-bold text-stone-900 mb-0">Prendas disponibles</h3>
+                    @if (esPerfilPropio)
+                    {
+                        <button @onclick="AgregarPrenda" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-circle me-1"></i>
+                            Agregar prenda
+                        </button>
+                    }
+                </div>
+
+                @if (prendas.Count == 0)
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-shirt text-stone-300" style="font-size: 48px;"></i>
+                        <p class="text-stone-500 mt-3">
+                            @if (esPerfilPropio)
+                            {
+                                <text>No has publicado prendas aún.</text>
+                            }
+                            else
+                            {
+                                <text>Este usuario no tiene prendas disponibles.</text>
+                            }
+                        </p>
+                        @if (esPerfilPropio)
+                        {
+                            <button @onclick="AgregarPrenda" class="btn btn-primary mt-2">
+                                Publicar primera prenda
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-3">
+                        @foreach (var prenda in prendas)
+                        {
+                            <div class="col-6 col-md-4 col-lg-3">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="position-relative">
+                                        <img src="@prenda.ImagenPrincipal" class="card-img-top rounded-top"
+                                             style="height: 200px; object-fit: cover;" />
+                                        @if (!prenda.Disponible)
+                                        {
+                                            <div class="position-absolute top-0 end-0 m-2">
+                                                <span class="badge bg-secondary">No disponible</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="card-body d-flex flex-column">
+                                        <h6 class="card-title fw-bold text-stone-900 mb-1">@prenda.Titulo</h6>
+                                        <p class="card-text text-stone-600 small mb-2">@prenda.Descripcion</p>
+                                        <div class="mt-auto">
+                                            <button @onclick="() => VerDetallePrenda(prenda.PrendaId)"
+                                                    class="btn btn-outline-primary btn-sm w-100">
+                                                Ver detalles
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <!-- Evaluaciones -->
+            @if (evaluaciones.Count > 0)
+            {
+                <div class="bg-white rounded-4 shadow p-4">
+                    <h3 class="fs-5 fw-bold text-stone-900 mb-4">Reseñas (@evaluaciones.Count)</h3>
+
+                    <div class="row g-3">
+                        @foreach (var evaluacion in evaluaciones.Take(5))
+                        {
+                            <div class="col-12">
+                                <div class="border rounded-3 p-3">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <img src="@(string.IsNullOrEmpty(evaluacion.UsuarioEvaluador?.UrlFotoPerfil) ? "/images/default-avatar.png" : evaluacion.UsuarioEvaluador?.UrlFotoPerfil)"
+                                             class="rounded-circle border border-2 border-stone-200"
+                                             style="width: 40px; height: 40px; object-fit: cover;" />
+                                        <div class="flex-fill">
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="fw-medium text-stone-900">@evaluacion.UsuarioEvaluador?.Nombre</span>
+                                                <div class="d-flex">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        <i class="bi @(i <= evaluacion.CalificacionGeneral ? "bi-star-fill text-amber-500" : "bi-star text-stone-300")" style="font-size: 14px;"></i>
+                                                    }
+                                                </div>
+                                                <small class="text-stone-500">@evaluacion.FechaEvaluacion.ToString("dd/MM/yyyy")</small>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(evaluacion.Comentario))
+                                            {
+                                                <p class="text-stone-700 mb-0 small">@evaluacion.Comentario</p>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? UsuarioId { get; set; }
+
+    private Usuario? usuario;
+    private List<Prenda> prendas = new();
+    private List<EvaluacionModel> evaluaciones = new();
+    private bool isLoading = true;
+    private bool esPerfilPropio = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadPerfil();
+    }
+
+    private async Task LoadPerfil()
+    {
+        isLoading = true;
+
+        try
+        {
+            int userId = UsuarioId ?? 0;
+
+            // Si no se especifica usuarioId, mostrar perfil propio
+            if (userId == 0)
+            {
+                var currentUser = await AuthenticationStateProvider.GetCurrentUserAsync();
+                if (currentUser != null)
+                {
+                    userId = currentUser.UsuarioId;
+                    esPerfilPropio = true;
+                }
+            }
+
+            if (userId > 0)
+            {
+                usuario = await PerfilPublicoService.ObtenerPerfilPublico(userId);
+                if (usuario != null)
+                {
+                    prendas = await PerfilPublicoService.ObtenerPrendasUsuario(userId);
+                    evaluaciones = await PerfilPublicoService.ObtenerValoraciones(userId);
+
+                    // Verificar si es perfil propio
+                    var currentUser = await AuthenticationStateProvider.GetCurrentUserAsync();
+                    esPerfilPropio = currentUser?.UsuarioId == userId;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void VerDetallePrenda(int prendaId)
+    {
+        NavigationManager.NavigateTo($"/detalle-prenda/{prendaId}");
+    }
+
+    private void EditarPerfil()
+    {
+        NavigationManager.NavigateTo("/editar-perfil");
+    }
+
+    private void AgregarPrenda()
+    {
+        NavigationManager.NavigateTo("/publicar-prenda");
+    }
+
+    private void VolverAExplorar()
+    {
+        NavigationManager.NavigateTo("/explorar");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IPerfilPublicoService PerfilPublicoService { get; set; } = default!;
+
+    [Inject]
+    private CustomAuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+}
