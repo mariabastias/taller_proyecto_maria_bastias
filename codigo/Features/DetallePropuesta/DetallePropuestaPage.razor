@@ -1,0 +1,500 @@
+@page "/detalle-propuesta/{propuestaId:int}"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.DetallePropuesta.Interfaces
+@using TruequeTextil.Shared.Models
+
+<div class="min-vh-100 bg-stone-50 py-4">
+    <div class="container">
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-amber-500" role="status">
+                    <span class="visually-hidden">Cargando propuesta...</span>
+                </div>
+            </div>
+        }
+        else if (propuesta == null)
+        {
+            <div class="text-center py-5">
+                <div class="bg-white rounded-4 shadow p-4">
+                    <i class="bi bi-arrow-left-right text-stone-400" style="font-size: 48px;"></i>
+                    <h3 class="mt-3 text-stone-600">Propuesta no encontrada</h3>
+                    <p class="text-stone-500">La propuesta que buscas no existe o no tienes permisos para verla.</p>
+                    <button @onclick="VolverAPropuestas" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-left me-1"></i>
+                        Volver a propuestas
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/explorar" class="text-decoration-none">Explorar</a></li>
+                    <li class="breadcrumb-item"><a href="/propuestas-recibidas" class="text-decoration-none">Propuestas</a></li>
+                    <li class="breadcrumb-item active">Propuesta #@propuesta.PropuestaId</li>
+                </ol>
+            </nav>
+
+            <div class="row g-4">
+                <!-- Prendas involucradas -->
+                <div class="col-12">
+                    <div class="bg-white rounded-4 shadow p-4">
+                        <h1 class="fs-4 fw-bold text-stone-900 mb-4">
+                            <i class="bi bi-arrow-left-right text-amber-500 me-2"></i>
+                            Propuesta de Trueque #@propuesta.PropuestaId
+                        </h1>
+
+                        <!-- Estado de la propuesta -->
+                        <div class="mb-4">
+                            @{
+                                var estadoBadge = GetEstadoBadge();
+                            }
+                            <span class="badge @estadoBadge.Class fs-6">
+                                <i class="@estadoBadge.Icon me-1"></i>
+                                @estadoBadge.Text
+                            </span>
+                            @if (propuesta.FechaExpiracion.HasValue)
+                            {
+                                <span class="text-stone-500 small ms-3">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Expira: @propuesta.FechaExpiracion.Value.ToString("dd/MM/yyyy HH:mm")
+                                </span>
+                            }
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Prenda ofrecida -->
+                            <div class="col-lg-6">
+                                <div class="border border-amber-200 rounded-3 p-3 bg-amber-25">
+                                    <h4 class="fs-6 fw-bold text-amber-800 mb-3">
+                                        <i class="bi bi-arrow-left-right me-1"></i>
+                                        Prenda ofrecida
+                                    </h4>
+                                    @if (propuesta.PrendaOfrecida != null)
+                                    {
+                                        <div class="d-flex">
+                                            <img src="@(string.IsNullOrEmpty(propuesta.PrendaOfrecida.Imagen) ? "/images/default-clothing.png" : propuesta.PrendaOfrecida.Imagen)"
+                                                 class="rounded-3 me-3 border"
+                                                 style="width: 80px; height: 80px; object-fit: cover;" alt="@propuesta.PrendaOfrecida.TituloPublicacion" />
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-6 fw-bold text-stone-900 mb-1">@propuesta.PrendaOfrecida.TituloPublicacion</h5>
+                                                <p class="text-stone-600 small mb-2">@propuesta.PrendaOfrecida.DescripcionPublicacion</p>
+                                                <div class="d-flex gap-2 mb-2">
+                                                    <span class="badge bg-amber-100 text-amber-800">@propuesta.PrendaOfrecida.Tipo</span>
+                                                    <span class="badge bg-stone-100 text-stone-700">@propuesta.PrendaOfrecida.Talla</span>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="@(string.IsNullOrEmpty(propuesta.UsuarioProponente?.UrlFotoPerfil) ? "/images/default-avatar.png" : propuesta.UsuarioProponente?.UrlFotoPerfil)"
+                                                         class="rounded-circle me-2 border border-2 border-stone-200"
+                                                         style="width: 24px; height: 24px; object-fit: cover;" />
+                                                    <span class="small text-stone-600">@propuesta.UsuarioProponente?.Nombre @propuesta.UsuarioProponente?.Apellido</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Prenda solicitada -->
+                            <div class="col-lg-6">
+                                <div class="border border-stone-200 rounded-3 p-3">
+                                    <h4 class="fs-6 fw-bold text-stone-800 mb-3">
+                                        <i class="bi bi-heart-fill text-amber-500 me-1"></i>
+                                        Prenda solicitada
+                                    </h4>
+                                    @if (propuesta.PrendaSolicitada != null)
+                                    {
+                                        <div class="d-flex">
+                                            <img src="@(string.IsNullOrEmpty(propuesta.PrendaSolicitada.Imagen) ? "/images/default-clothing.png" : propuesta.PrendaSolicitada.Imagen)"
+                                                 class="rounded-3 me-3 border"
+                                                 style="width: 80px; height: 80px; object-fit: cover;" alt="@propuesta.PrendaSolicitada.TituloPublicacion" />
+                                            <div class="flex-grow-1">
+                                                <h5 class="fs-6 fw-bold text-stone-900 mb-1">@propuesta.PrendaSolicitada.TituloPublicacion</h5>
+                                                <p class="text-stone-600 small mb-2">@propuesta.PrendaSolicitada.DescripcionPublicacion</p>
+                                                <div class="d-flex gap-2 mb-2">
+                                                    <span class="badge bg-amber-100 text-amber-800">@propuesta.PrendaSolicitada.Tipo</span>
+                                                    <span class="badge bg-stone-100 text-stone-700">@propuesta.PrendaSolicitada.Talla</span>
+                                                </div>
+                                                <div class="d-flex align-items-center">
+                                                    <img src="@(string.IsNullOrEmpty(propuesta.UsuarioReceptor?.UrlFotoPerfil) ? "/images/default-avatar.png" : propuesta.UsuarioReceptor?.UrlFotoPerfil)"
+                                                         class="rounded-circle me-2 border border-2 border-stone-200"
+                                                         style="width: 24px; height: 24px; object-fit: cover;" />
+                                                    <span class="small text-stone-600">@propuesta.UsuarioReceptor?.Nombre @propuesta.UsuarioReceptor?.Apellido</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mensaje acompañante -->
+                        @if (!string.IsNullOrEmpty(propuesta.MensajeAcompanante))
+                        {
+                            <div class="mt-4 p-3 bg-stone-50 rounded-3">
+                                <h5 class="fs-6 fw-bold text-stone-900 mb-2">
+                                    <i class="bi bi-chat-text text-amber-500 me-1"></i>
+                                    Mensaje de @propuesta.UsuarioProponente?.Nombre
+                                </h5>
+                                <p class="text-stone-700 mb-0">@propuesta.MensajeAcompanante</p>
+                            </div>
+                        }
+
+                        <!-- Fechas importantes -->
+                        <div class="mt-4 row g-3">
+                            <div class="col-md-4">
+                                <div class="text-center p-2 bg-stone-50 rounded-2">
+                                    <div class="small text-stone-500">Propuesta enviada</div>
+                                    <div class="fw-medium text-stone-900">@propuesta.FechaPropuesta.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            </div>
+                            @if (propuesta.FechaRespuesta.HasValue)
+                            {
+                                <div class="col-md-4">
+                                    <div class="text-center p-2 bg-stone-50 rounded-2">
+                                        <div class="small text-stone-500">Respuesta</div>
+                                        <div class="fw-medium text-stone-900">@propuesta.FechaRespuesta.Value.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                </div>
+                            }
+                            @if (propuesta.FechaExpiracion.HasValue)
+                            {
+                                <div class="col-md-4">
+                                    <div class="text-center p-2 bg-stone-50 rounded-2">
+                                        <div class="small text-stone-500">Expira</div>
+                                        <div class="fw-medium text-stone-900">@propuesta.FechaExpiracion.Value.ToString("dd/MM/yyyy")</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones disponibles -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="bg-white rounded-4 shadow p-4">
+                        <h3 class="fs-5 fw-bold text-stone-900 mb-4">Acciones</h3>
+                        
+                        @if (propuesta.EstadoPropuestaId == 1) // Pendiente
+                        {
+                            @if (EsUsuarioReceptor)
+                            {
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <button @onclick="MostrarModalAceptar" class="btn btn-success">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Aceptar propuesta
+                                    </button>
+                                    <button @onclick="MostrarModalRechazar" class="btn btn-outline-danger">
+                                        <i class="bi bi-x-circle me-1"></i>
+                                        Rechazar propuesta
+                                    </button>
+                                </div>
+                            }
+                            else if (EsUsuarioProponente)
+                            {
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <button @onclick="MostrarModalCancelar" class="btn btn-outline-danger">
+                                        <i class="bi bi-x me-1"></i>
+                                        Cancelar propuesta
+                                    </button>
+                                </div>
+                            }
+                        }
+                        else if (propuesta.EstadoPropuestaId == 2) // Aceptada
+                        {
+                            <div class="d-flex gap-3 flex-wrap">
+                                <button @onclick="MostrarModalCompletar" class="btn btn-success">
+                                    <i class="bi bi-check2-all me-1"></i>
+                                    Marcar como completado
+                                </button>
+                                @if (EsUsuarioProponente)
+                                {
+                                    <button @onclick="MostrarModalCancelar" class="btn btn-outline-danger">
+                                        <i class="bi bi-x me-1"></i>
+                                        Cancelar propuesta
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else if (propuesta.EstadoPropuestaId == 6) // Completada
+                        {
+                            <div class="alert alert-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                Este trueque ha sido completado exitosamente.
+                            </div>
+                        }
+                        else if (propuesta.EstadoPropuestaId == 7) // Cancelada
+                        {
+                            <div class="alert alert-secondary">
+                                <i class="bi bi-x-circle-fill me-2"></i>
+                                Esta propuesta ha sido cancelada.
+                            </div>
+                        }
+                        else if (propuesta.EstadoPropuestaId == 3) // Rechazada
+                        {
+                            <div class="alert alert-danger">
+                                <i class="bi bi-x-circle-fill me-2"></i>
+                                Esta propuesta fue rechazada.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat de negociación -->
+            @if (propuesta.EstadoPropuestaId == 2 && mostrarChat) // Solo para propuestas aceptadas
+            {
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="bg-white rounded-4 shadow p-4">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <h3 class="fs-5 fw-bold text-stone-900">
+                                    <i class="bi bi-chat-dots text-amber-500 me-2"></i>
+                                    Chat de negociación
+                                </h3>
+                                <button @onclick="AlternarChat" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-chevron-up"></i>
+                                </button>
+                            </div>
+
+                            <!-- Lista de mensajes -->
+                            <div class="border rounded-3 p-3 mb-3" style="height: 300px; overflow-y: auto; background-color: #fafafa;">
+                                @if (mensajes.Count == 0)
+                                {
+                                    <div class="text-center text-stone-500 py-4">
+                                        <i class="bi bi-chat-text" style="font-size: 32px;"></i>
+                                        <p class="mt-2 mb-0">No hay mensajes aún. ¡Inicia la conversación!</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @foreach (var mensaje in mensajes)
+                                    {
+                                        var esMio = mensaje.UsuarioId == currentUser?.UsuarioId;
+                                        <div class="mb-3 @(esMio ? "text-end" : "text-start")">
+                                            <div class="d-flex @(esMio ? "justify-content-end" : "justify-content-start")">
+                                                <div class="d-flex align-items-start @(esMio ? "flex-row-reverse" : "flex-row")" style="max-width: 70%;">
+                                                    @if (!esMio)
+                                                    {
+                                                        <img src="@(string.IsNullOrEmpty(mensaje.Usuario?.UrlFotoPerfil) ? "/images/default-avatar.png" : mensaje.Usuario?.UrlFotoPerfil)"
+                                                             class="rounded-circle me-2 border"
+                                                             style="width: 32px; height: 32px; object-fit: cover;" />
+                                                    }
+                                                    <div>
+                                                        <div class="small text-stone-500 mb-1">
+                                                            @mensaje.Usuario?.Nombre @mensaje.Usuario?.Apellido
+                                                            • @mensaje.FechaEnvio.ToString("HH:mm")
+                                                        </div>
+                                                        <div class="p-2 rounded-3 @(esMio ? "bg-amber-500 text-white" : "bg-white border")">
+                                                            @mensaje.MensajeTexto
+                                                        </div>
+                                                    </div>
+                                                    @if (esMio)
+                                                    {
+                                                        <img src="@(string.IsNullOrEmpty(currentUser?.UrlFotoPerfil) ? "/images/default-avatar.png" : currentUser?.UrlFotoPerfil)"
+                                                             class="rounded-circle ms-2 border"
+                                                             style="width: 32px; height: 32px; object-fit: cover;" />
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+
+                            <!-- Enviar mensaje -->
+                            <div class="d-flex gap-2">
+                                <input @bind="nuevoMensaje" 
+                                       @onkeypress="EnviarMensajeEnter"
+                                       class="form-control" 
+                                       placeholder="Escribe un mensaje..."
+                                       maxlength="1000" />
+                                <button @onclick="EnviarMensaje" 
+                                        disabled="@(string.IsNullOrWhiteSpace(nuevoMensaje) || enviandoMensaje)"
+                                        class="btn btn-primary">
+                                    @if (enviandoMensaje)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-send"></i>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Botón para mostrar chat si está aceptado pero oculto -->
+            @if (propuesta.EstadoPropuestaId == 2 && !mostrarChat)
+            {
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="bg-white rounded-4 shadow p-4">
+                            <button @onclick="AlternarChat" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-chat-dots me-2"></i>
+                                Abrir chat de negociación
+                                @if (mensajesNoLeidos > 0)
+                                {
+                                    <span class="badge bg-danger ms-2">@mensajesNoLeidos</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<!-- Modales -->
+@if (mostrarModalAceptar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-check-circle text-success me-2"></i>
+                        Aceptar Propuesta
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalAceptar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que quieres aceptar esta propuesta de trueque?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Mensaje de aceptación (opcional):</label>
+                        <textarea @bind="mensajeAceptacion" class="form-control" rows="3" maxlength="500" 
+                                  placeholder="Escribe un mensaje para el proponente..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CerrarModalAceptar">Cancelar</button>
+                    <button type="button" class="btn btn-success" @onclick="AceptarPropuesta" disabled="@procesandoAccion">
+                        @if (procesandoAccion)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        Aceptar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalRechazar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-x-circle text-danger me-2"></i>
+                        Rechazar Propuesta
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalRechazar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que quieres rechazar esta propuesta de trueque?</p>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo del rechazo (opcional):</label>
+                        <textarea @bind="motivoRechazo" class="form-control" rows="3" maxlength="500" 
+                                  placeholder="Explica por qué rechazas la propuesta..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CerrarModalRechazar">Cancelar</button>
+                    <button type="button" class="btn btn-danger" @onclick="RechazarPropuesta" disabled="@procesandoAccion">
+                        @if (procesandoAccion)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        Rechazar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalCancelar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-x text-danger me-2"></i>
+                        Cancelar Propuesta
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalCancelar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que quieres cancelar esta propuesta de trueque?</p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Esta acción no se puede deshacer.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo de cancelación (opcional):</label>
+                        <textarea @bind="motivoCancelacion" class="form-control" rows="3" maxlength="500" 
+                                  placeholder="Explica por qué cancelas la propuesta..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CerrarModalCancelar">Mantener</button>
+                    <button type="button" class="btn btn-danger" @onclick="CancelarPropuesta" disabled="@procesandoAccion">
+                        @if (procesandoAccion)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalCompletar)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-check2-all text-success me-2"></i>
+                        Completar Trueque
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalCompletar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Has recibido la prenda y quieres marcar este trueque como completado?</p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Al completar el trueque, ambas prendas se marcarán como intercambiadas y podrán evaluarse mutuamente.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" @onclick="CerrarModalCompletar">Cancelar</button>
+                    <button type="button" class="btn btn-success" @onclick="CompletarTrueque" disabled="@procesandoAccion">
+                        @if (procesandoAccion)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                        }
+                        Completar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
