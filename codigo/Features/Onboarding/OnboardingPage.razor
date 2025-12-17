@@ -1,0 +1,254 @@
+@page "/onboarding"
+@attribute [Authorize]
+
+@rendermode InteractiveServer
+
+<div class="min-vh-100 bg-stone-50 d-flex align-items-center justify-content-center p-4">
+    <div class="w-100" style="max-width: 480px;">
+        <div class="bg-white rounded-4 shadow p-4 p-md-5 pt-md-4">
+            <!-- Indicador de pasos -->
+            <div class="d-flex justify-content-center gap-3 mb-4">
+                @for (int idx = 0; idx < steps.Count; idx++)
+                {
+                    var currentIdx = idx;
+                    <div class="rounded-pill @(currentIdx == step ? "bg-amber-600" : currentIdx < step ? "bg-success" : "bg-stone-200")"
+                         style="height: 8px; width: @(currentIdx == step ? "48px" : "32px"); transition: all 0.3s;">
+                    </div>
+                }
+            </div>
+
+            <!-- Ilustracion -->
+            <div class="rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center shadow"
+                 style="width: 192px; height: 192px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+                <span style="font-size: 4rem;">@steps[step].Icon</span>
+            </div>
+
+            <!-- Contenido -->
+            <div class="text-center mb-4">
+                <h1 class="fs-3 fw-bold text-stone-900 mb-3">@steps[step].Title</h1>
+                <p class="text-stone-600 fs-5 mb-0">@steps[step].Description</p>
+            </div>
+
+            <!-- Caracteristicas destacadas -->
+            @if (step == 0)
+            {
+                <div class="alert alert-info d-flex align-items-center justify-content-center mb-3" role="alert">
+                    <div class="d-flex gap-2 small">
+                        <div class="d-flex align-items-center">
+                            <svg class="me-1" style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Seguro
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <svg class="me-1" style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Verificado
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <svg class="me-1" style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Comunidad
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (step == 1)
+            {
+                <div class="alert alert-success d-flex align-items-start mb-3" role="alert">
+                    <svg class="text-success flex-shrink-1 mt-1 me-2" style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <div class="small">
+                        <p class="fw-medium mb-1">Sistema de confianza:</p>
+                        <ul class="mb-0 ps-3">
+                            <li>Perfiles verificados con reputacion</li>
+                            <li>Evaluaciones mutuas obligatorias</li>
+                            <li>Moderacion activa de contenido</li>
+                        </ul>
+                    </div>
+                </div>
+            }
+            else if (step == 2)
+            {
+                <div class="alert alert-warning d-flex align-items-start mb-3" role="alert">
+                    <svg class="text-warning flex-shrink-1 mt-1 me-2" style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <div class="small">
+                        <p class="fw-medium mb-1">Impacto positivo:</p>
+                        <ul class="mb-0 ps-3">
+                            <li>Reduce el desperdicio textil</li>
+                            <li>Extiende la vida util de la ropa</li>
+                            <li>Fomenta el consumo responsable</li>
+                        </ul>
+                    </div>
+                </div>
+            }
+
+            <!-- Navegacion -->
+            <div class="d-grid gap-2">
+                @if (step < steps.Count - 1)
+                {
+                    <button @onclick="NextStep"
+                        class="btn btn-lg text-white fw-medium bg-amber-600 d-flex align-items-center justify-content-center"
+                        style="--bs-btn-hover-bg: var(--amber-700);"
+                        disabled="@isLoading">
+                        <span>Siguiente</span>
+                        <svg class="ms-2" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                    <button @onclick="SkipToProfile"
+                        class="btn btn-outline-secondary btn-lg fw-medium"
+                        disabled="@isLoading">
+                        Saltar introduccion
+                    </button>
+                }
+                else
+                {
+                    <button @onclick="CompletarOnboarding"
+                        class="btn btn-lg text-white fw-medium bg-amber-600 d-flex align-items-center justify-content-center"
+                        style="--bs-btn-hover-bg: var(--amber-700);"
+                        disabled="@isLoading">
+                        @if (isLoading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Preparando...</span>
+                        }
+                        else
+                        {
+                            <svg class="me-2" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            <span>Comenzar mi viaje!</span>
+                        }
+                    </button>
+                }
+            </div>
+
+            <!-- Contador -->
+            <div class="text-center mt-3">
+                <p class="small text-stone-500 mb-0">
+                    @(step + 1) de @steps.Count
+                </p>
+            </div>
+
+            <!-- Welcome message for last step -->
+            @if (step == steps.Count - 1)
+            {
+                <div class="mt-3 text-center">
+                    <p class="text-stone-600 fst-italic mb-0">
+                        "Cada prenda que intercambias es un paso hacia un mundo mas sostenible"
+                    </p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private class Step
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Icon { get; set; } = string.Empty;
+    }
+
+    private List<Step> steps = new List<Step>
+    {
+        new Step
+        {
+            Title = "Intercambia prendas",
+            Description = "Publica las prendas que ya no usas y encuentra nuevas opciones sin gastar dinero.",
+            Icon = "↔"
+        },
+        new Step
+        {
+            Title = "Comunidad verificada",
+            Description = "Todos los usuarios son verificados. Sistema de reputacion para intercambios seguros.",
+            Icon = "✓"
+        },
+        new Step
+        {
+            Title = "Moda sostenible",
+            Description = "Contribuye al cuidado del medio ambiente dando nueva vida a las prendas.",
+            Icon = "♻"
+        }
+    };
+
+    private int step = 0;
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+        {
+        var currentUser = await OnboardingService.GetCurrentUser();
+        if (currentUser != null)
+        {
+            var onboardingCompletado = await OnboardingService.OnboardingCompletado(currentUser.UsuarioId);
+            if (onboardingCompletado)
+            {
+                var perfilCompleto = await OnboardingService.PerfilCompleto(currentUser.UsuarioId);
+                if (perfilCompleto)
+                {
+                    NavigationManager.NavigateTo("/explorar");
+                }
+                else
+                {
+                    NavigationManager.NavigateTo("/completar-perfil");
+                }
+            }
+        }
+    }
+
+    private void NextStep()
+    {
+        if (step < steps.Count - 1)
+        {
+            step++;
+        }
+    }
+
+    private async Task CompletarOnboarding()
+    {
+        isLoading = true;
+        try
+        {
+            var currentUser = await OnboardingService.GetCurrentUser();
+            if (currentUser != null)
+            {
+                await OnboardingService.MarcarOnboardingCompletado(currentUser.UsuarioId);
+            }
+
+            NavigationManager.NavigateTo("/completar-perfil");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SkipToProfile()
+    {
+        await CompletarOnboarding();
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IOnboardingService OnboardingService { get; set; } = default!;
+}
