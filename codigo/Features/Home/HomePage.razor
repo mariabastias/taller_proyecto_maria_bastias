@@ -1,0 +1,208 @@
+@page "/"
+
+@rendermode InteractiveServer
+
+<PageTitle>Trueque Textil Digital - Intercambia Ropa de Forma Sostenible</PageTitle>
+
+<div class="min-vh-100 bg-stone-50">
+    <!-- Hero Section -->
+    <div class="bg-gradient-amber ">
+        <div class="container p-5">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="position-relative">
+                        <div class="bg-white rounded-4 shadow-lg p-4 text-center">
+                            <img src="/marca-tt.png" alt="Trueque Textil" class="img-fluid" style="" />
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold text-stone-900 mb-4">
+                        Dale una segunda vida a tu ropa
+                    </h1>
+                    <p class="lead text-stone-600 mb-4">
+                        Intercambia prendas que ya no usas por otras que te encantan.
+                        Una forma inteligente y ecológica de renovar tu armario sin gastar dinero.
+                    </p>
+                    <div class="d-flex flex-column flex-sm-row gap-3">
+                        <button type="button"
+                            class="btn btn-lg bg-amber-600 text-white fw-semibold px-4 py-3 rounded-3"
+                            @onclick="NavigateToLogin">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>
+                            Iniciar Sesión
+                        </button>
+                        <button type="button"
+                            class="btn btn-lg btn-outline-dark fw-semibold px-4 py-3 rounded-3"
+                            @onclick="NavigateToRegistro">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Crear Cuenta
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="py-5 bg-white">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <h2 class="display-6 fw-bold text-stone-900 mb-3">¿Cómo funciona?</h2>
+                <p class="text-stone-600 fs-5">Tres simples pasos para empezar a intercambiar</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="bg-amber-100 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-camera text-amber-600 fs-2"></i>
+                        </div>
+                        <h4 class="fw-bold text-stone-800 mb-3">1. Publica tus prendas</h4>
+                        <p class="text-stone-600">
+                            Sube fotos de la ropa que ya no usas y describe su estado.
+                            Es rápido y sencillo.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="bg-amber-100 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-search text-amber-600 fs-2"></i>
+                        </div>
+                        <h4 class="fw-bold text-stone-800 mb-3">2. Explora y encuentra</h4>
+                        <p class="text-stone-600">
+                            Navega por cientos de prendas disponibles.
+                            Filtra por talla, estilo y ubicación.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center p-4">
+                        <div class="bg-amber-100 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+                             style="width: 80px; height: 80px;">
+                            <i class="bi bi-hand-thumbs-up text-amber-600 fs-2"></i>
+                        </div>
+                        <h4 class="fw-bold text-stone-800 mb-3">3. Intercambia</h4>
+                        <p class="text-stone-600">
+                            Propón un trueque y coordina el intercambio.
+                            ¡Renueva tu armario sin gastar!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benefits Section -->
+    <div class="p-5 bg-stone-100">
+        <div class="container py-4">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <h2 class="display-6 fw-bold text-stone-900 mb-4">
+                        Beneficios de intercambiar ropa
+                    </h2>
+                    <div class="vstack gap-4">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="bg-success rounded-circle py-1 p-2 flex-shrink-0">
+                                <i class="bi bi-check-lg text-white"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-stone-800 mb-1">Ahorra dinero</h5>
+                                <p class="text-stone-600 mb-0">Renueva tu guardarropa sin gastar un centavo.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="bg-success rounded-circle py-1 p-2 flex-shrink-0">
+                                <i class="bi bi-check-lg text-white"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-stone-800 mb-1">Cuida el planeta</h5>
+                                <p class="text-stone-600 mb-0">Reduce la huella de carbono de la industria textil.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="bg-success rounded-circle py-1 p-2 flex-shrink-0">
+                                <i class="bi bi-check-lg text-white"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-stone-800 mb-1">Encuentra piezas únicas</h5>
+                                <p class="text-stone-600 mb-0">Accede a prendas originales que no encontrarás en tiendas.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="bg-success rounded-circle py-1 p-2 flex-shrink-0">
+                                <i class="bi bi-check-lg text-white"></i>
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-stone-800 mb-1">Conecta con tu comunidad</h5>
+                                <p class="text-stone-600 mb-0">Conoce personas con tus mismos intereses y estilo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="bg-white rounded-4 shadow p-5 text-center">
+                        <div class="row g-4">
+                            <div class="col-6">
+                                <div class="display-4 fw-bold text-amber-600">500+</div>
+                                <p class="text-stone-600 mb-0">Prendas disponibles</p>
+                            </div>
+                            <div class="col-6">
+                                <div class="display-4 fw-bold text-amber-600">200+</div>
+                                <p class="text-stone-600 mb-0">Usuarios activos</p>
+                            </div>
+                            <div class="col-6">
+                                <div class="display-4 fw-bold text-amber-600">1000+</div>
+                                <p class="text-stone-600 mb-0">Intercambios exitosos</p>
+                            </div>
+                            <div class="col-6">
+                                <div class="display-4 fw-bold text-amber-600">5kg</div>
+                                <p class="text-stone-600 mb-0">CO₂ ahorrado por trueque</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="py-5 bg-amber-600">
+        <div class="container py-4 text-center">
+            <h2 class="display-6 fw-bold text-white mb-3">
+                ¿Listo para empezar a intercambiar?
+            </h2>
+            <p class="lead text-amber-100 mb-4">
+                Únete a nuestra comunidad y dale una segunda oportunidad a la moda.
+            </p>
+            <button type="button"
+                class="btn btn-lg bg-white text-amber-700 fw-bold px-5 py-3 rounded-3"
+                @onclick="NavigateToRegistro">
+                Crear cuenta gratis
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-4 bg-stone-800">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-repeat text-amber-500 fs-4"></i>
+                    <span class="fw-bold text-white">Trueque Textil</span>
+                </div>
+                <p class="text-stone-400 mb-0 small">
+                    © 2024 Trueque Textil Digital. Todos los derechos reservados.
+                </p>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<style>
+    .bg-gradient-amber {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    }
+</style>
