@@ -1,0 +1,275 @@
+@page "/mis-prendas"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.MisPrendas.Interfaces
+@using TruequeTextil.Shared.Models
+
+<div class="min-vh-100 bg-stone-50 py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fs-4 fw-bold text-stone-900 mb-1">Mis prendas</h1>
+                <p class="text-stone-600 mb-0">Gestiona tus prendas publicadas</p>
+            </div>
+            <button @onclick="AgregarPrenda" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>
+                Agregar prenda
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-amber-500" role="status">
+                    <span class="visually-hidden">Cargando prendas...</span>
+                </div>
+            </div>
+        }
+        else if (prendas.Count == 0)
+        {
+            <div class="text-center py-5">
+                <div class="bg-white rounded-4 shadow p-5">
+                    <i class="bi bi-shirt text-stone-300" style="font-size: 64px;"></i>
+                    <h3 class="mt-3 text-stone-600">No tienes prendas publicadas</h3>
+                    <p class="text-stone-500 mb-4">Comienza publicando tu primera prenda para intercambiar</p>
+                    <button @onclick="AgregarPrenda" class="btn btn-primary btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>
+                        Publicar primera prenda
+                    </button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- Filtros -->
+            <div class="bg-white rounded-4 shadow p-3 mb-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium text-stone-700">Estado</label>
+                        <select @bind="filtroEstado" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="disponible">Disponibles</option>
+                            <option value="no-disponible">No disponibles</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium text-stone-700">Buscar</label>
+                        <input @bind="filtroBusqueda" type="text" class="form-control" placeholder="Buscar por título..." />
+                    </div>
+                    <div class="col-md-4">
+                        <button @onclick="AplicarFiltros" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-search me-1"></i>
+                            Filtrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de prendas -->
+            <div class="row g-4">
+                @foreach (var prenda in prendasFiltradas)
+                {
+                    <div class="col-12 col-md-6 col-lg-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="position-relative">
+                                <img src="@prenda.ImagenPrincipal" class="card-img-top rounded-top"
+                                     style="height: 200px; object-fit: cover;" />
+                                <div class="position-absolute top-0 end-0 m-2">
+                                    @if (prenda.Disponible)
+                                    {
+                                        <span class="badge bg-success">Disponible</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">No disponible</span>
+                                    }
+                                </div>
+                                @if (prenda.PropuestasActivas > 0)
+                                {
+                                    <div class="position-absolute bottom-0 start-0 m-2">
+                                        <span class="badge bg-amber-500 text-white">
+                                            @prenda.PropuestasActivas propuesta@(prenda.PropuestasActivas > 1 ? "s" : "")
+                                        </span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title fw-bold text-stone-900 mb-2">@prenda.Titulo</h5>
+                                <p class="card-text text-stone-600 small mb-2">@prenda.Descripcion</p>
+                                <div class="mb-3">
+                                    <span class="badge bg-stone-100 text-stone-700 me-1">@prenda.Tipo</span>
+                                    <span class="badge bg-stone-100 text-stone-700">@prenda.Talla</span>
+                                </div>
+                                <div class="mt-auto">
+                                    <div class="d-flex gap-2">
+                                        <button @onclick="() => VerDetalle(prenda.PrendaId)" class="btn btn-outline-primary btn-sm flex-fill">
+                                            Ver
+                                        </button>
+                                        <button @onclick="() => EditarPrenda(prenda.PrendaId)" class="btn btn-outline-secondary btn-sm flex-fill">
+                                            Editar
+                                        </button>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-three-dots"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <button @onclick="() => CambiarDisponibilidad(prenda.PrendaId, !prenda.Disponible)"
+                                                            class="dropdown-item">
+                                                        <i class="bi @(prenda.Disponible ? "bi-eye-slash" : "bi-eye") me-2"></i>
+                                                        @(prenda.Disponible ? "Marcar no disponible" : "Marcar disponible")
+                                                    </button>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <button @onclick="() => EliminarPrenda(prenda.PrendaId)"
+                                                            class="dropdown-item text-danger">
+                                                        <i class="bi bi-trash me-2"></i>
+                                                        Eliminar
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private List<Prenda> prendas = new();
+    private List<Prenda> prendasFiltradas = new();
+    private bool isLoading = true;
+    private string filtroEstado = "";
+    private string filtroBusqueda = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPrendas();
+    }
+
+    private async Task LoadPrendas()
+    {
+        try
+        {
+            var user = await AuthenticationStateProvider.GetCurrentUserAsync();
+            if (user != null)
+            {
+                prendas = await MisPrendasService.ObtenerMisPrendas(user.UsuarioId);
+                AplicarFiltrosInterno();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void AplicarFiltrosInterno()
+    {
+        prendasFiltradas = prendas.Where(p =>
+        {
+            bool estadoMatch = string.IsNullOrEmpty(filtroEstado) ||
+                (filtroEstado == "disponible" && p.Disponible) ||
+                (filtroEstado == "no-disponible" && !p.Disponible);
+
+            bool busquedaMatch = string.IsNullOrEmpty(filtroBusqueda) ||
+                p.Titulo.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                p.Descripcion.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase);
+
+            return estadoMatch && busquedaMatch;
+        }).ToList();
+    }
+
+    private void AplicarFiltros()
+    {
+        AplicarFiltrosInterno();
+    }
+
+    private void VerDetalle(int prendaId)
+    {
+        NavigationManager.NavigateTo($"/detalle-prenda/{prendaId}");
+    }
+
+    private void EditarPrenda(int prendaId)
+    {
+        NavigationManager.NavigateTo($"/editar-prenda/{prendaId}");
+    }
+
+    private async Task CambiarDisponibilidad(int prendaId, bool disponible)
+    {
+        try
+        {
+            var user = await AuthenticationStateProvider.GetCurrentUserAsync();
+            if (user != null)
+            {
+                var (success, error) = await MisPrendasService.CambiarDisponibilidad(prendaId, user.UsuarioId, disponible);
+                if (success)
+                {
+                    await LoadPrendas(); // Recargar lista
+                }
+                else
+                {
+                    Console.WriteLine($"Error cambiar disponibilidad: {error}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task EliminarPrenda(int prendaId)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", "Esta prenda tiene propuestas activas. No podrás eliminarla."))
+            return;
+
+        try
+        {
+            var user = await AuthenticationStateProvider.GetCurrentUserAsync();
+            if (user != null)
+            {
+                var (success, error) = await MisPrendasService.EliminarPrenda(prendaId, user.UsuarioId);
+                if (success)
+                {
+                    await LoadPrendas(); // Recargar lista
+                }
+                else
+                {
+                    Console.WriteLine($"Error al eliminar prenda: {error}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void AgregarPrenda()
+    {
+        NavigationManager.NavigateTo("/publicar-prenda");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IMisPrendasService MisPrendasService { get; set; } = default!;
+
+    [Inject]
+    private CustomAuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}

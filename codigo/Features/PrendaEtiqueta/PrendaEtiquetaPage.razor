@@ -1,0 +1,252 @@
+@page "/prenda-etiquetas/{prendaId:int}"
+@rendermode InteractiveServer
+
+@using TruequeTextil.Features.PrendaEtiqueta.Interfaces
+@using TruequeTextil.Shared.Components
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h1 class="h3 mb-1 text-stone-900">Etiquetas de Prenda</h1>
+                    <p class="text-stone-600 mb-0">Gestiona las etiquetas de la prenda #@PrendaId</p>
+                </div>
+                <button class="btn btn-outline-secondary" @onclick="NavigateBack">
+                    <i class="bi bi-arrow-left me-2"></i>Volver
+                </button>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    @errorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-check-circle me-2"></i>
+                    @successMessage
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom-0">
+                            <h5 class="mb-0 text-stone-900">
+                                <i class="bi bi-tags me-2 text-amber-600"></i>
+                                Etiquetas Actuales (@etiquetasActuales.Count)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            @if (etiquetasActuales.Count == 0)
+                            {
+                                <div class="text-center py-4">
+                                    <i class="bi bi-tags display-1 text-stone-300 mb-3"></i>
+                                    <h5 class="text-stone-600">Sin etiquetas</h5>
+                                    <p class="text-stone-500">Esta prenda no tiene etiquetas asignadas</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach (var etiquetaId in etiquetasActuales)
+                                    {
+                                        <span class="badge bg-amber-100 text-amber-800 px-3 py-2">
+                                            <i class="bi bi-tag me-1"></i>
+                                            Etiqueta #@etiquetaId
+                                            <button class="btn btn-sm btn-outline-danger ms-2 p-0 border-0"
+                                                @onclick="() => RemoverEtiqueta(etiquetaId)">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Agregar Etiqueta -->
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-white border-bottom-0">
+                            <h5 class="mb-0 text-stone-900">
+                                <i class="bi bi-plus-circle me-2 text-amber-600"></i>
+                                Agregar Etiqueta
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <input type="number" class="form-control" @bind="nuevaEtiquetaId"
+                                        placeholder="ID de la etiqueta" min="1" />
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-primary w-100" @onclick="AgregarEtiqueta"
+                                        disabled="@isLoading">
+                                        @if (isLoading)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span>Agregando...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-plus me-2"></i>
+                                            <span>Agregar</span>
+                                         }
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-text">
+                                Ingresa el ID numérico de la etiqueta que deseas agregar
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!-- Estadísticas -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="text-stone-900 mb-3">
+                                <i class="bi bi-bar-chart text-amber-600 me-2"></i>
+                                Estadísticas
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="h4 mb-1 text-amber-600">@etiquetasActuales.Count</div>
+                                        <small class="text-stone-600">Etiquetas</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center">
+                                        <div class="h4 mb-1 text-amber-600">@contadorEtiquetas</div>
+                                        <small class="text-stone-600">Total en BD</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información -->
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-body">
+                            <h6 class="text-stone-900 mb-3">
+                                <i class="bi bi-info-circle text-amber-600 me-2"></i>
+                                Información
+                            </h6>
+                            <div class="small text-stone-600">
+                                <p class="mb-2">Las etiquetas ayudan a categorizar y buscar prendas más fácilmente.</p>
+                                <p class="mb-0">Puedes agregar o remover etiquetas según sea necesario.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int PrendaId { get; set; }
+
+    private List<int> etiquetasActuales = new();
+    private int nuevaEtiquetaId = 0;
+    private int contadorEtiquetas = 0;
+    private bool isLoading = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEtiquetas();
+    }
+
+    private async Task LoadEtiquetas()
+    {
+        try
+        {
+            etiquetasActuales = await PrendaEtiquetaService.ObtenerEtiquetasDePrenda(PrendaId);
+            contadorEtiquetas = await PrendaEtiquetaService.ContarEtiquetasDePrenda(PrendaId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar etiquetas: {ex.Message}";
+        }
+    }
+
+    private async Task AgregarEtiqueta()
+    {
+        if (nuevaEtiquetaId <= 0)
+        {
+            errorMessage = "Ingresa un ID de etiqueta válido";
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+        isLoading = true;
+
+        try
+        {
+            var (success, error) = await PrendaEtiquetaService.AgregarEtiquetaAPrenda(PrendaId, nuevaEtiquetaId);
+            if (success)
+            {
+                successMessage = "Etiqueta agregada exitosamente";
+                nuevaEtiquetaId = 0;
+                await LoadEtiquetas(); // Recargar
+            }
+            else
+            {
+                errorMessage = error ?? "Error al agregar etiqueta";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al agregar etiqueta: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RemoverEtiqueta(int etiquetaId)
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var (success, error) = await PrendaEtiquetaService.RemoverEtiquetaDePrenda(PrendaId, etiquetaId);
+            if (success)
+            {
+                successMessage = "Etiqueta removida exitosamente";
+                await LoadEtiquetas(); // Recargar
+            }
+            else
+            {
+                errorMessage = error ?? "Error al remover etiqueta";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al remover etiqueta: {ex.Message}";
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"/prenda/{PrendaId}");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IPrendaEtiquetaService PrendaEtiquetaService { get; set; } = default!;
+}

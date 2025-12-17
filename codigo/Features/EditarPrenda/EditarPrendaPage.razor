@@ -1,0 +1,505 @@
+@page "/editar-prenda/{prendaId:int}"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.EditarPrenda.Interfaces
+@using TruequeTextil.Shared.Models
+
+<div class="min-vh-100 bg-stone-50">
+    <!-- Header -->
+    <div class="bg-white border-bottom border-stone-200 sticky-top">
+        <div class="container" style="max-width: 896px;">
+            <div class="px-4 py-3 d-flex align-items-center justify-content-between">
+                <button @onclick="VolverAtras"
+                    class="btn btn-link text-stone-600 text-decoration-none d-flex align-items-center gap-2 p-0">
+                    <i class="bi bi-arrow-left"></i>
+                    <span class="small">Cancelar</span>
+                </button>
+
+                <h1 class="h6 fw-semibold text-stone-900 mb-0">Editar prenda</h1>
+
+                <div style="width: 4rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container" style="max-width: 896px;">
+        <div class="p-4 pb-24">
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-amber-600" role="status">
+                        <span class="visually-hidden">Cargando prenda...</span>
+                    </div>
+                </div>
+            }
+            else if (prenda == null)
+            {
+                <div class="text-center py-5">
+                    <div class="bg-white rounded-4 shadow p-5">
+                        <i class="bi bi-exclamation-triangle text-stone-300" style="font-size: 64px;"></i>
+                        <h3 class="mt-3 text-stone-600">Prenda no encontrada</h3>
+                        <p class="text-stone-500 mb-4">La prenda que intentas editar no existe o no tienes permisos para editarla.</p>
+                        <button @onclick="VolverAtras" class="btn btn-primary">
+                            <i class="bi bi-arrow-left me-2"></i>Volver
+                        </button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <!-- Indicador de progreso -->
+                <div class="mb-5">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="small text-stone-600">Paso @pasoActual de 3</span>
+                        <span class="small text-stone-500">@((pasoActual / 3.0 * 100).ToString("0"))% completado</span>
+                    </div>
+                    <div class="progress" style="height: 0.5rem;">
+                        <div class="progress-bar bg-amber-600" role="progressbar" style="width: @((pasoActual / 3.0 * 100))%"></div>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(mensajeError))
+                {
+                    <div class="alert alert-danger rounded-3 mb-4">
+                        <i class="bi bi-exclamation-triangle me-2"></i>@mensajeError
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(mensajeExito))
+                {
+                    <div class="alert alert-success rounded-3 mb-4">
+                        <i class="bi bi-check-circle me-2"></i>@mensajeExito
+                    </div>
+                }
+
+                <!-- Fotos -->
+                <div class="card rounded-4 shadow mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white fw-bold small" style="width: 2rem; height: 2rem;">
+                                1
+                            </div>
+                            <h2 class="text-stone-900 fw-medium mb-0">Fotos de la prenda</h2>
+                        </div>
+
+                        <InputFile OnChange="CargarFotos" multiple accept=".jpg,.jpeg,.png" id="fileInput" class="d-none" />
+
+                        <div class="row row-cols-3 g-3 mb-3">
+                            <div class="col">
+                                <div @onclick="SeleccionarFotos"
+                                    class="ratio ratio-1x1 bg-stone-100 rounded-3 border border-2 border-dashed border-stone-300 d-flex flex-column align-items-center justify-content-center cursor-pointer hover-bg-stone-50">
+                                    <div class="text-center">
+                                        <i class="bi bi-camera display-6 mb-2"></i>
+                                        <span class="small text-stone-500 d-block">Agregar foto</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @foreach (var foto in fotos.Take(5))
+                            {
+                                <div class="col">
+                                    <div class="position-relative ratio ratio-1x1">
+                                        <div class="bg-stone-100 rounded-3 border border-stone-200 d-flex align-items-center justify-content-center">
+                                            <span class="display-5">@foto.Emoji</span>
+                                        </div>
+                                        <button @onclick="() => EliminarFoto(foto)" type="button"
+                                            class="btn btn-danger position-absolute top-0 end-0 m-2 rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 1.5rem; height: 1.5rem; line-height: 1;">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+
+                            @{ var espaciosVacios = Math.Max(0, 5 - fotos.Count); }
+                            @for (int i = 0; i < espaciosVacios; i++)
+                            {
+                                <div class="col">
+                                    <div @onclick="SeleccionarFotos"
+                                        class="ratio ratio-1x1 bg-stone-100 rounded-3 border border-2 border-dashed border-stone-300 d-flex align-items-center justify-content-center text-stone-400 cursor-pointer hover-bg-stone-50">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(mensajeFotos))
+                        {
+                            <p class="small mb-3 @(errorFotos ? "text-danger" : "text-success")">
+                                @mensajeFotos
+                            </p>
+                        }
+
+                        <p class="small text-stone-500 mb-0">
+                            Sube entre 1 y 5 fotos. La primera sera la imagen principal de tu publicacion.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Información básica -->
+                <div class="card rounded-4 shadow mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white fw-bold small" style="width: 2rem; height: 2rem;">
+                                2
+                            </div>
+                            <h2 class="text-stone-900 fw-medium mb-0">Informacion basica</h2>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="titulo" class="form-label text-stone-700 fw-medium">Titulo de la publicacion</label>
+                            <input type="text" id="titulo" @bind="titulo" maxlength="100"
+                                class="form-control rounded-3 focus-ring-amber"
+                                placeholder="Ej: Chaqueta de mezclilla vintage" />
+                            <small class="text-stone-500">@titulo.Length/100 caracteres</small>
+                        </div>
+
+                        <div>
+                            <label for="descripcion" class="form-label text-stone-700 fw-medium">Descripcion</label>
+                            <textarea id="descripcion" @bind="descripcion" maxlength="500"
+                                class="form-control rounded-3 focus-ring-amber" rows="4"
+                                placeholder="Describe tu prenda, menciona detalles como el material, estado, etc."></textarea>
+                            <small class="text-stone-500">@descripcion.Length/500 caracteres</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categorización -->
+                <div class="card rounded-4 shadow mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white fw-bold small" style="width: 2rem; height: 2rem;">
+                                3
+                            </div>
+                            <h2 class="text-stone-900 fw-medium mb-0">Categorizacion</h2>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-4">
+                                <label for="categoria" class="form-label text-stone-700 fw-medium">Tipo de prenda</label>
+                                <select id="categoria" @bind="categoriaId" class="form-select rounded-3 focus-ring-amber">
+                                    <option value="0">Selecciona un tipo</option>
+                                    @foreach (var cat in categorias)
+                                    {
+                                        <option value="@cat.CategoriaId">@cat.NombreCategoria</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-sm-4">
+                                <label for="talla" class="form-label text-stone-700 fw-medium">Talla</label>
+                                <select id="talla" @bind="talla" class="form-select rounded-3 focus-ring-amber">
+                                    <option value="">Selecciona una talla</option>
+                                    @foreach (var t in tallas)
+                                    {
+                                        <option value="@t">@t</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-sm-4">
+                                <label for="estado" class="form-label text-stone-700 fw-medium">Estado</label>
+                                <select id="estado" @bind="estadoPrendaId" class="form-select rounded-3 focus-ring-amber">
+                                    <option value="0">Selecciona un estado</option>
+                                    @foreach (var est in estadosPrenda)
+                                    {
+                                        <option value="@est.EstadoId">@est.NombreEstado</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Botón fijo inferior -->
+    @if (prenda != null)
+    {
+        <div class="fixed-bottom bg-white border-top border-stone-200 p-4">
+            <div class="container" style="max-width: 896px;">
+                <button @onclick="GuardarCambios"
+                    class="btn btn-primary text-white w-100 py-3 px-4 rounded-4 fw-medium shadow"
+                    disabled="@(!FormularioValido() || guardando)">
+                    @if (guardando)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Guardando...</span>
+                    }
+                    else
+                    {
+                        <span>Guardar cambios</span>
+                    }
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int PrendaId { get; set; }
+
+    // Injected services
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+    [Inject] private IEditarPrendaService EditarPrendaService { get; set; } = default!;
+
+    // View model for photos
+    private class FotoViewModel
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string Emoji { get; set; } = "📷";
+        public byte[]? Bytes { get; set; }
+        public string? Base64Data { get; set; }
+    }
+
+    // Form fields
+    private string titulo = string.Empty;
+    private string descripcion = string.Empty;
+    private int categoriaId = 0;
+    private string talla = string.Empty;
+    private int estadoPrendaId = 0;
+
+    // Lists from service
+    private List<CategoriaPrenda> categorias = new();
+    private List<EstadoPrenda> estadosPrenda = new();
+    private List<string> tallas = new();
+
+    // Photos
+    private List<FotoViewModel> fotos = new();
+    private string mensajeFotos = string.Empty;
+    private bool errorFotos = false;
+
+    // UI state
+    private bool cargando = true;
+    private bool guardando = false;
+    private string mensajeError = string.Empty;
+    private string mensajeExito = string.Empty;
+
+    // Data
+    private Prenda? prenda;
+
+    // Constants
+    private const int MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private readonly string[] emojis = { "👕", "👖", "👗", "🧥", "👔", "👚", "👘", "🧦", "🧣", "👒", "🧢", "👟", "👠" };
+    private Random random = new();
+
+    // Progress calculation
+    private int pasoActual
+    {
+        get
+        {
+            if (fotos.Count == 0) return 1;
+            if (string.IsNullOrWhiteSpace(titulo) || string.IsNullOrWhiteSpace(descripcion)) return 1;
+            if (categoriaId == 0 || string.IsNullOrWhiteSpace(talla) || estadoPrendaId == 0) return 2;
+            return 3;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            cargando = true;
+
+            // Load categories, states and sizes in parallel
+            var categoriasTask = EditarPrendaService.ObtenerCategorias();
+            var estadosTask = EditarPrendaService.ObtenerEstadosPrenda();
+            var tallasTask = EditarPrendaService.ObtenerTallas();
+            var prendaTask = EditarPrendaService.ObtenerPrendaPorId(PrendaId);
+
+            await Task.WhenAll(categoriasTask, estadosTask, tallasTask, prendaTask);
+
+            categorias = await categoriasTask;
+            estadosPrenda = await estadosTask;
+            tallas = await tallasTask;
+            prenda = await prendaTask;
+
+            if (prenda != null)
+            {
+                // Load form data
+                titulo = prenda.TituloPublicacion;
+                descripcion = prenda.DescripcionPublicacion;
+                categoriaId = prenda.CategoriaId;
+                talla = prenda.Talla;
+                estadoPrendaId = prenda.EstadoPrendaId;
+
+                // Load existing images as base64
+                foreach (var imagen in prenda.Imagenes)
+                {
+                    fotos.Add(new FotoViewModel
+                    {
+                        Nombre = $"imagen_{imagen.Orden}",
+                        Emoji = emojis[random.Next(emojis.Length)],
+                        Base64Data = imagen.ImagenUrl // Assuming it's already base64
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al cargar los datos de la prenda: {ex.Message}";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private bool FormularioValido()
+    {
+        return fotos.Count >= 1 &&
+               !string.IsNullOrWhiteSpace(titulo) &&
+               !string.IsNullOrWhiteSpace(descripcion) &&
+               categoriaId > 0 &&
+               !string.IsNullOrWhiteSpace(talla) &&
+               estadoPrendaId > 0;
+    }
+
+    private void VolverAtras()
+    {
+        NavigationManager.NavigateTo("/mis-prendas");
+    }
+
+    private async Task SeleccionarFotos()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('fileInput').click()");
+    }
+
+    private async Task CargarFotos(InputFileChangeEventArgs e)
+    {
+        mensajeFotos = string.Empty;
+        errorFotos = false;
+
+        try
+        {
+            if (fotos.Count >= 5)
+            {
+                mensajeFotos = "Ya has alcanzado el limite de 5 fotos.";
+                errorFotos = true;
+                return;
+            }
+
+            var filesToProcess = Math.Min(e.FileCount, 5 - fotos.Count);
+
+            for (int i = 0; i < filesToProcess; i++)
+            {
+                var file = e.GetMultipleFiles(filesToProcess)[i];
+
+                if (file.Size > MAX_FILE_SIZE)
+                {
+                    mensajeFotos = $"El archivo {file.Name} es demasiado grande. El tamano maximo es 5MB.";
+                    errorFotos = true;
+                    continue;
+                }
+
+                if (!file.ContentType.StartsWith("image/"))
+                {
+                    mensajeFotos = $"El archivo {file.Name} debe ser una imagen (JPG o PNG).";
+                    errorFotos = true;
+                    continue;
+                }
+
+                using var stream = file.OpenReadStream(MAX_FILE_SIZE);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                var foto = new FotoViewModel
+                {
+                    Nombre = file.Name,
+                    Emoji = emojis[random.Next(emojis.Length)],
+                    Bytes = bytes,
+                    Base64Data = $"data:{file.ContentType};base64,{Convert.ToBase64String(bytes)}"
+                };
+
+                fotos.Add(foto);
+            }
+
+            if (!errorFotos)
+            {
+                mensajeFotos = $"{fotos.Count} foto(s) cargada(s) correctamente.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeFotos = $"Error al cargar las fotos: {ex.Message}";
+            errorFotos = true;
+        }
+    }
+
+    private void EliminarFoto(FotoViewModel foto)
+    {
+        fotos.Remove(foto);
+        mensajeFotos = "Foto eliminada.";
+        errorFotos = false;
+    }
+
+    private async Task GuardarCambios()
+    {
+        if (!FormularioValido() || guardando || prenda == null) return;
+
+        mensajeError = string.Empty;
+        mensajeExito = string.Empty;
+        guardando = true;
+
+        try
+        {
+            // Get current user
+            var user = await EditarPrendaService.GetCurrentUser();
+            if (user == null)
+            {
+                mensajeError = "Debes iniciar sesion para editar la prenda.";
+                guardando = false;
+                return;
+            }
+
+            // Check ownership
+            if (prenda.UsuarioId != user.UsuarioId)
+            {
+                mensajeError = "No tienes permisos para editar esta prenda.";
+                guardando = false;
+                return;
+            }
+
+            // Convert photos to URLs
+            var imagenes = fotos.Select(f => f.Base64Data ?? string.Empty).ToList();
+
+            var (success, error) = await EditarPrendaService.ActualizarPrenda(
+                prenda.PrendaId,
+                user.UsuarioId,
+                titulo,
+                descripcion,
+                categoriaId,
+                talla,
+                estadoPrendaId,
+                imagenes
+            );
+
+            if (success)
+            {
+                mensajeExito = "Prenda actualizada exitosamente.";
+                await Task.Delay(1500);
+                NavigationManager.NavigateTo("/mis-prendas");
+            }
+            else
+            {
+                mensajeError = error ?? "Error al actualizar la prenda.";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al procesar la actualizacion: {ex.Message}";
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+}
