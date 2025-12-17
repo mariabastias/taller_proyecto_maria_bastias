@@ -1,0 +1,251 @@
+@page "/mensajes"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.Mensajeria.Interfaces
+@using TruequeTextil.Shared.Models
+
+<div class="min-vh-100 bg-stone-50">
+    <!-- Header -->
+    <div class="bg-white border-bottom border-stone-200 sticky-top" style="z-index: 40;">
+        <div class="container px-3 py-3 d-flex align-items-center justify-content-between" style="max-width: 896px;">
+            <button @onclick="VolverAtras" class="btn btn-link p-0 d-flex align-items-center gap-2 text-stone-600 text-decoration-none">
+                <i class="bi bi-arrow-left"></i>
+                <span>Volver</span>
+            </button>
+
+            <h1 class="text-stone-900 mb-0 h5">Mensajes</h1>
+
+            <div style="width: 4rem;"></div>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container p-3" style="max-width: 896px;">
+        @if (cargando)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-amber-600" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="text-stone-600 mt-3">Cargando conversaciones...</p>
+            </div>
+        }
+        else if (conversaciones.Count > 0)
+        {
+            <div class="vstack gap-3">
+                @foreach (var conv in conversaciones)
+                {
+                    <div @onclick="() => AbrirChat(conv.PropuestaId)"
+                        class="@(conv.MensajesNoLeidos > 0 ? "bg-amber-50 border-amber-200" : "bg-white border-stone-200") border rounded-3 p-3 cursor-pointer shadow-hover"
+                        style="cursor: pointer;">
+                        <div class="d-flex gap-3">
+                            <!-- Avatar -->
+                            <div class="position-relative flex-shrink-0">
+                                @if (!string.IsNullOrEmpty(conv.FotoOtroUsuario) && !conv.FotoOtroUsuario.Contains("default"))
+                                {
+                                    <img src="@conv.FotoOtroUsuario" alt="@conv.NombreOtroUsuario"
+                                        class="rounded-circle object-fit-cover"
+                                        style="width: 3rem; height: 3rem;" />
+                                }
+                                else
+                                {
+                                    <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center text-white fw-medium"
+                                        style="width: 3rem; height: 3rem;">
+                                        @GetIniciales(conv.NombreOtroUsuario)
+                                    </div>
+                                }
+
+                                @if (conv.MensajesNoLeidos > 0)
+                                {
+                                    <div class="position-absolute bg-danger rounded-circle d-flex align-items-center justify-content-center text-white"
+                                        style="width: 1.25rem; height: 1.25rem; top: -0.25rem; right: -0.25rem; font-size: 0.65rem;">
+                                        @(conv.MensajesNoLeidos > 9 ? "9+" : conv.MensajesNoLeidos.ToString())
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Contenido -->
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h3 class="text-stone-900 fw-medium mb-0 fs-6 text-truncate">@conv.NombreOtroUsuario</h3>
+                                    <span class="small text-stone-500 flex-shrink-0 ms-2">@FormatearFecha(conv.FechaUltimoMensaje)</span>
+                                </div>
+
+                                <!-- Info de la propuesta -->
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge @GetEstadoBadgeClass(conv.EstadoPropuesta) small">@conv.EstadoPropuesta</span>
+                                    <span class="small text-stone-500 text-truncate">
+                                        @(conv.EsProponente ? "Tu oferta" : "Te ofrecen") por @(conv.EsProponente ? conv.TituloPrendaSolicitada : conv.TituloPrendaOfrecida)
+                                    </span>
+                                </div>
+
+                                <!-- Ultimo mensaje -->
+                                @if (!string.IsNullOrEmpty(conv.UltimoMensaje))
+                                {
+                                    <p class="small @(conv.MensajesNoLeidos > 0 ? "text-stone-900 fw-medium" : "text-stone-600") mb-0 text-truncate">
+                                        @TruncateMessage(conv.UltimoMensaje, 60)
+                                    </p>
+                                }
+                            </div>
+
+                            <!-- Imagenes de prendas -->
+                            <div class="d-none d-md-flex align-items-center gap-1 flex-shrink-0">
+                                <div class="border border-stone-200 rounded overflow-hidden" style="width: 2.5rem; height: 2.5rem;">
+                                    <img src="@conv.ImagenPrendaOfrecida" alt="" class="w-100 h-100 object-fit-cover"
+                                        onerror="this.src='/images/placeholder.png'" />
+                                </div>
+                                <i class="bi bi-arrow-left-right text-stone-400 small"></i>
+                                <div class="border border-stone-200 rounded overflow-hidden" style="width: 2.5rem; height: 2.5rem;">
+                                    <img src="@conv.ImagenPrendaSolicitada" alt="" class="w-100 h-100 object-fit-cover"
+                                        onerror="this.src='/images/placeholder.png'" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <!-- Estado vacio -->
+            <div class="bg-white p-5 rounded-3 border border-stone-200 text-center">
+                <div class="bg-stone-100 rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+                    style="width: 4rem; height: 4rem;">
+                    <i class="bi bi-chat-dots fs-2 text-stone-400"></i>
+                </div>
+                <h3 class="text-stone-900 mb-2 h5">No tienes conversaciones</h3>
+                <p class="text-stone-600 mb-4">
+                    Cuando envies o recibas mensajes en tus propuestas de trueque, apareceran aqui
+                </p>
+                <button @onclick="@(() => NavigationManager.NavigateTo("/explorar"))"
+                    class="btn bg-amber-600 text-white hover-amber-700">
+                    <i class="bi bi-search me-2"></i>Explorar prendas
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- Navegacion inferior movil -->
+    <div class="fixed-bottom bg-white border-top border-stone-200 d-md-none" style="z-index: 50;">
+        <div class="d-flex align-items-center justify-content-around p-2">
+            <button @onclick="@(() => NavigationManager.NavigateTo("/explorar"))"
+                class="btn btn-link p-2 text-stone-600 text-decoration-none d-flex flex-column align-items-center gap-1">
+                <i class="bi bi-house"></i>
+                <span class="small">Inicio</span>
+            </button>
+            <button class="btn btn-link p-2 text-amber-600 text-decoration-none d-flex flex-column align-items-center gap-1">
+                <i class="bi bi-chat-fill"></i>
+                <span class="small">Mensajes</span>
+            </button>
+            <button @onclick="@(() => NavigationManager.NavigateTo("/publicar-prenda"))"
+                class="btn btn-link p-2 text-decoration-none d-flex flex-column align-items-center gap-1 position-relative" style="margin-top: -1.5rem;">
+                <div class="bg-amber-600 rounded-circle d-flex align-items-center justify-content-center shadow"
+                    style="width: 3.5rem; height: 3.5rem;">
+                    <i class="bi bi-plus-lg text-white fs-4"></i>
+                </div>
+            </button>
+            <button @onclick="@(() => NavigationManager.NavigateTo("/propuestas-recibidas"))"
+                class="btn btn-link p-2 text-stone-600 text-decoration-none d-flex flex-column align-items-center gap-1">
+                <i class="bi bi-arrow-left-right"></i>
+                <span class="small">Propuestas</span>
+            </button>
+            <button @onclick="@(() => NavigationManager.NavigateTo("/perfil-publico"))"
+                class="btn btn-link p-2 text-stone-600 text-decoration-none d-flex flex-column align-items-center gap-1">
+                <i class="bi bi-person"></i>
+                <span class="small">Perfil</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Espaciado para navegacion movil -->
+    <div class="d-md-none" style="height: 5rem;"></div>
+</div>
+
+@code {
+    private List<ConversacionResumen> conversaciones = new();
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarConversaciones();
+    }
+
+    private async Task CargarConversaciones()
+    {
+        try
+        {
+            cargando = true;
+            var user = await MensajeriaService.GetCurrentUser();
+            if (user != null)
+            {
+                conversaciones = await MensajeriaService.ObtenerConversaciones(user.UsuarioId);
+            }
+        }
+        catch (Exception)
+        {
+            // Log error
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void VolverAtras()
+    {
+        NavigationManager.NavigateTo("/explorar");
+    }
+
+    private void AbrirChat(int propuestaId)
+    {
+        NavigationManager.NavigateTo($"/mensajes/chat/{propuestaId}");
+    }
+
+    private string GetIniciales(string nombre)
+    {
+        if (string.IsNullOrEmpty(nombre)) return "?";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length >= 2)
+            return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+        return nombre.Length >= 2 ? nombre[..2].ToUpper() : nombre.ToUpper();
+    }
+
+    private string FormatearFecha(DateTime fecha)
+    {
+        if (fecha == DateTime.MinValue) return "";
+
+        var ahora = DateTime.Now;
+        var diferencia = ahora - fecha;
+
+        if (diferencia.TotalMinutes < 1) return "Ahora";
+        if (diferencia.TotalMinutes < 60) return $"Hace {(int)diferencia.TotalMinutes} min";
+        if (diferencia.TotalHours < 24) return $"Hace {(int)diferencia.TotalHours} h";
+        if (diferencia.TotalDays < 7) return $"Hace {(int)diferencia.TotalDays} d";
+        return fecha.ToString("dd/MM/yyyy");
+    }
+
+    private string GetEstadoBadgeClass(string estado)
+    {
+        return estado.ToLower() switch
+        {
+            "pendiente" => "bg-amber-100 text-amber-800",
+            "aceptada" => "bg-success bg-opacity-10 text-success",
+            "rechazada" => "bg-danger bg-opacity-10 text-danger",
+            "completada" => "bg-primary bg-opacity-10 text-primary",
+            "cancelada" => "bg-secondary bg-opacity-10 text-secondary",
+            _ => "bg-secondary bg-opacity-10 text-secondary"
+        };
+    }
+
+    private string TruncateMessage(string mensaje, int maxLength)
+    {
+        if (string.IsNullOrEmpty(mensaje)) return "";
+        return mensaje.Length <= maxLength ? mensaje : mensaje[..maxLength] + "...";
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IMensajeriaService MensajeriaService { get; set; } = default!;
+}
