@@ -1,0 +1,209 @@
+@page "/login"
+
+@inject AutenticacionService AutenticacionService
+@inject CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+@rendermode InteractiveServer
+
+<div class="min-vh-100 bg-stone-50 d-flex align-items-center justify-content-center p-4">
+    <div class="w-100" style="max-width: 480px;">
+        <div class="bg-white rounded-4 shadow p-4 p-md-5 pt-md-4">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="bg-amber-100 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                    <svg class="text-amber-600" style="width: 32px; height: 32px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                        </path>
+                    </svg>
+                </div>
+                <h1 class="fs-3 fw-bold text-stone-900 mb-2">Bienvenido de vuelta</h1>
+                <p class="text-stone-600 mb-0">Accede de forma segura a tu cuenta</p>
+            </div>
+
+            <!-- Formulario -->
+            <div class="mt-4">
+                <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="text-danger small mb-3" />
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+                            <svg class="me-2" style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            @errorMessage
+                        </div>
+                    }
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-medium text-stone-700">Correo electronico</label>
+                        <InputText id="email" @bind-Value="loginModel.Email"
+                            class="form-control form-control-lg"
+                            placeholder="tu@email.com" />
+                        <ValidationMessage For="@(() => loginModel.Email)" class="text-danger small d-block mt-1" />
+                    </div>
+
+                    <!-- Contrasena -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-medium text-stone-700">Contrasena</label>
+                        <InputText id="password" @bind-Value="loginModel.Password" type="password"
+                            class="form-control form-control-lg"
+                            placeholder="********" />
+                        <ValidationMessage For="@(() => loginModel.Password)" class="text-danger small d-block mt-1" />
+                    </div>
+
+                    <!-- Recordar sesion y recuperar contrasena -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" id="remember" @bind="loginModel.RememberMe"
+                                class="form-check-input" />
+                            <label for="remember" class="form-check-label small text-stone-700">
+                                Mantener sesion iniciada
+                            </label>
+                        </div>
+                        <button type="button" @onclick="NavigateToRecuperarPassword"
+                            class="btn btn-link btn-sm text-amber-600 text-decoration-none p-0">
+                            Olvidaste tu contrasena?
+                        </button>
+                    </div>
+
+                    <!-- Boton de inicio de sesion -->
+                    <button type="submit"
+                        class="btn btn-lg w-100 text-white fw-medium bg-amber-600"
+                        style="--bs-btn-hover-bg: var(--amber-700);"
+                        disabled="@(isLoading)">
+                        @if (isLoading)
+                        {
+                            <span class="d-flex align-items-center justify-content-center">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Iniciando sesion...
+                            </span>
+                        }
+                        else
+                        {
+                            <span>Iniciar sesion</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+
+            <!-- Divisor -->
+            <div class="my-4">
+                <div class="position-relative">
+                    <hr class="border-stone-300" />
+                    <div class="position-absolute top-50 start-50 translate-middle bg-white px-3">
+                        <span class="small text-stone-500">No tienes cuenta?</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registro -->
+            <div class="text-center">
+                <button type="button" @onclick="NavigateToRegistro"
+                    class="btn btn-outline-secondary btn-lg w-100 fw-medium">
+                    Crear cuenta nueva
+                </button>
+            </div>
+
+            <!-- Trust indicators -->
+            <div class="mt-4 pt-4 border-top border-stone-200">
+                <div class="d-flex align-items-center justify-content-center gap-3 small text-stone-500">
+                    <div class="d-flex align-items-center">
+                        <svg class="text-success me-1" style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Seguro
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <svg class="text-success me-1" style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Privado
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <svg class="text-success me-1" style="width: 16px; height: 16px;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Verificado
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private class LoginModel
+    {
+        [Required(ErrorMessage = "El correo electronico es obligatorio")]
+        [EmailAddress(ErrorMessage = "El formato del correo electronico no es valido")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La contrasena es obligatoria")]
+        public string Password { get; set; } = string.Empty;
+
+        public bool RememberMe { get; set; }
+    }
+
+    private LoginModel loginModel = new LoginModel();
+    private bool isLoading = false;
+    private string? errorMessage = null;
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+        isLoading = true;
+
+        try
+        {
+            var (success, error, usuario, requiresAdminVerification) = await AutenticacionService.ValidarCredenciales(loginModel.Email, loginModel.Password);
+
+            if (success && usuario != null)
+            {
+                await AuthStateProvider.SignInAsync(usuario);
+
+                var redirectUrl = await AutenticacionService.ObtenerPaginaRedireccionPostLogin(usuario.UsuarioId) ?? "/explorar";
+                if (requiresAdminVerification)
+                {
+                    redirectUrl = "/admin";
+                }
+
+                Nav.NavigateTo(redirectUrl);
+            }
+            else
+            {
+                errorMessage = error ?? "Usuario o contraseña incorrecta.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al iniciar sesion: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    private void NavigateToRecuperarPassword()
+    {
+        Nav.NavigateTo("/recuperar-password");
+    }
+
+    private void NavigateToRegistro()
+    {
+        Nav.NavigateTo("/registro");
+    }
+}
