@@ -1,0 +1,288 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject TruequeTextil.Shared.Services.UsuarioService UsuarioService
+@inject INotificacionesService NotificacionesService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject TruequeTextil.Shared.Services.AutenticacionService AutenticacionService
+
+<TruequeTextil.Shared.Components.NotificacionesClient OnNotificacionRecibida="HandleNotificacionRecibida"
+													  OnContadorActualizado="HandleContadorActualizado" />
+
+<div class="min-vh-100 bg-stone-50">
+
+	@if (isAuthenticated && ShouldShowHeader)
+	{
+		<!-- Header -->
+		<header class="bg-white shadow-sm border-bottom">
+			<nav class="navbar navbar-expand-md navbar-light">
+				<div class="container">
+					<a href="/">
+						<img src="/marca-tt.png" alt="Trueque Textil" class="img-fluid" style="position: absolute;z-index: 9999;height: 60px;top: 0;" />
+					</a>
+
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+							aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="mainNavbar">
+						<ul class="navbar-nav ms-auto">
+
+							<!-- Siempre visible -->
+							<li class="nav-item">
+								<a class="nav-link" href="/explorar">
+									<i class="bi bi-search me-1"></i>Explorar
+								</a>
+							</li>
+
+							<li class="nav-item">
+								<a class="nav-link" href="/mis-prendas">
+									<i class="bi bi-collection me-1"></i>Mis Prendas
+								</a>
+							</li>
+
+							<li class="nav-item">
+								<a class="nav-link" href="/favoritos">
+									<i class="bi bi-heart me-1"></i>Favoritos
+								</a>
+							</li>
+
+							<li class="nav-item">
+								<a class="nav-link" href="/publicar-prenda">
+									<i class="bi bi-plus-circle me-1"></i>Publicar
+								</a>
+							</li>
+
+							<li class="nav-item">
+								<a class="nav-link" href="/propuestas-recibidas">
+									<i class="bi bi-arrow-repeat me-1"></i>Propuestas
+								</a>
+							</li>
+
+							<li class="nav-item">
+								<a class="nav-link" href="/mensajes">
+									<i class="bi bi-chat-dots me-1"></i>Mensajes
+								</a>
+							</li>
+
+							<li class="nav-item">
+								<a class="nav-link position-relative" href="/notificaciones">
+									<i class="bi bi-bell me-1"></i>
+
+									@if (contadorNotificaciones > 0)
+									{
+										<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+											@(contadorNotificaciones > 99 ? "99+" : contadorNotificaciones.ToString())
+										</span>
+									}
+								</a>
+							</li>
+
+							<!-- Dropdown Usuario -->
+							<li class="nav-item dropdown">
+								<a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+								   data-bs-toggle="dropdown" aria-expanded="false">
+									@if (!string.IsNullOrEmpty(_usuarioActual?.UrlFotoPerfil))
+									{
+										<img src="@_usuarioActual.UrlFotoPerfil" alt="@userFullName"
+											 class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;" />
+									}
+									else
+									{
+										<div class="rounded-circle bg-amber-600 text-white d-flex align-items-center justify-content-center me-2"
+											 style="width: 32px; height: 32px; font-size: 0.75rem; font-weight: 600;">
+											@(userInitials ?? "U")
+										</div>
+									}
+									<span class="d-none d-lg-inline">@(userName ?? "Usuario")</span>
+								</a>
+								<ul class="dropdown-menu dropdown-menu-end shadow-sm">
+									<li class="px-3 py-2">
+										<div class="fw-semibold">@userFullName</div>
+										<small class="text-muted">@userEmail</small>
+									</li>
+									<li><hr class="dropdown-divider"></li>
+									<li>
+										<a class="dropdown-item" href="/perfil-publico">
+											<i class="bi bi-person me-2"></i>Mi Perfil
+										</a>
+									</li>
+									<li>
+										<a class="dropdown-item" href="/editar-perfil">
+											<i class="bi bi-gear me-2"></i>Editar Perfil
+										</a>
+									</li>
+									<li><hr class="dropdown-divider"></li>
+									<li>
+										<button class="dropdown-item text-danger" @onclick="CerrarSesion">
+											<i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+										</button>
+									</li>
+								</ul>
+							</li>
+
+						</ul>
+					</div>
+				</div>
+			</nav>
+		</header>
+	}
+
+	<!-- Contenido -->
+	<main>
+		@Body
+	</main>
+</div>
+
+
+<div id="blazor-error-ui" data-nosnippet class="position-fixed bottom-0 start-0 w-100 bg-warning-subtle shadow p-3 d-none" style="z-index: 1050;">
+	Ha ocurrido un error inesperado.
+	<a href="." class="text-warning-emphasis text-decoration-underline ms-2">Recargar</a>
+	<button type="button" class="btn-close position-absolute end-0 top-50 translate-middle-y me-3" aria-label="Cerrar"></button>
+</div>
+
+
+@code {
+	private Usuario? _usuarioActual;
+	private int contadorNotificaciones = 0;
+	private TruequeTextil.Shared.Components.NotificacionesClient.NotificacionRecibida? ultimaNotificacion;
+
+	private bool isAuthenticated;
+	private string? userName;
+	private string? userEmail;
+	private string? userFullName;
+	private string? userInitials;
+	private bool isUserMenuOpen = false;
+
+	// ocultar el header en la pagina onboarding
+	private bool ShouldShowHeader =>
+		NavigationManager
+			.ToBaseRelativePath(NavigationManager.Uri)
+			.Trim('/')
+			.ToLowerInvariant() is not ("onboarding");
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+		await UpdateAuthenticationState();
+
+		NavigationManager.LocationChanged += OnLocationChanged;
+	}
+
+	private async Task UpdateAuthenticationState()
+	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+		userName = user.Identity?.Name;
+
+		if (isAuthenticated)
+		{
+			await CargarContadorNotificaciones();
+			await CargarDatosUsuario();
+		}
+		else
+		{
+			contadorNotificaciones = 0;
+			LimpiarDatosUsuario();
+		}
+
+		StateHasChanged();
+	}
+
+	private async Task CargarDatosUsuario()
+	{
+		try
+		{
+			_usuarioActual = await AutenticacionService.GetCurrentUser();
+			if (_usuarioActual != null)
+			{
+				userFullName = $"{_usuarioActual.Nombre} {_usuarioActual.Apellido}".Trim();
+				userEmail = _usuarioActual.CorreoElectronico;
+				userInitials = _usuarioActual.Iniciales;
+			}
+		}
+		catch
+		{
+			LimpiarDatosUsuario();
+		}
+	}
+
+	private void LimpiarDatosUsuario()
+	{
+		_usuarioActual = null;
+		userFullName = null;
+		userEmail = null;
+		userInitials = null;
+	}
+
+	private void ToggleUserMenu()
+	{
+		isUserMenuOpen = !isUserMenuOpen;
+	}
+
+	private void CloseUserMenu()
+	{
+		isUserMenuOpen = false;
+	}
+
+	private async Task CerrarSesion()
+	{
+		await AutenticacionService.Logout();
+		LimpiarDatosUsuario();
+		isUserMenuOpen = false;
+		NavigationManager.NavigateTo("/login", forceLoad: true);
+	}
+
+	private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+	{
+		await UpdateAuthenticationState();
+	}
+
+	private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+	{
+		StateHasChanged();
+	}
+
+	public void Dispose()
+	{
+		AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+		NavigationManager.LocationChanged -= OnLocationChanged;
+	}
+
+	private async Task CargarContadorNotificaciones()
+	{
+		try
+		{
+			var user = HttpContextAccessor.HttpContext?.User;
+			var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+			if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out var userId))
+			{
+				contadorNotificaciones = await NotificacionesService.ContarNotificacionesNoLeidas(userId);
+			}
+		}
+		catch
+		{
+			contadorNotificaciones = 0;
+		}
+	}
+
+	private void HandleNotificacionRecibida(TruequeTextil.Shared.Components.NotificacionesClient.NotificacionRecibida notificacion)
+	{
+		ultimaNotificacion = notificacion;
+		contadorNotificaciones++;
+		StateHasChanged();
+	}
+
+	private void HandleContadorActualizado(int count)
+	{
+		contadorNotificaciones = count;
+		StateHasChanged();
+	}
+}

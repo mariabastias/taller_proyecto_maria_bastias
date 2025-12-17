@@ -1,0 +1,56 @@
+<div class="bg-white border-bottom px-3 py-3 shadow-sm">
+    <a class="fs-5 fw-bold text-amber-600 text-decoration-none" href="">Trueque Textil</a>
+</div>
+
+<nav class="nav flex-column py-3">
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="" Match="NavLinkMatch.All">
+        <i class="bi bi-house text-secondary"></i> Inicio
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="explorar">
+        <i class="bi bi-search text-secondary"></i> Explorar
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="mis-prendas">
+        <i class="bi bi-collection text-secondary"></i> Mis Prendas
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="publicar-prenda">
+        <i class="bi bi-plus-circle text-secondary"></i> Publicar Prenda
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="propuestas-recibidas">
+        <i class="bi bi-arrow-repeat text-secondary"></i> Propuestas
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="notificaciones">
+        <i class="bi bi-bell text-secondary"></i> Notificaciones
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="perfil-publico">
+        <i class="bi bi-person-circle text-secondary"></i> Mi Perfil
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="login">
+        <i class="bi bi-box-arrow-in-right text-secondary"></i> Iniciar Sesion
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="registro">
+        <i class="bi bi-pencil-square text-secondary"></i> Registrarse
+    </NavLink>
+
+    <NavLink class="nav-link d-flex align-items-center gap-2 px-3 py-2 text-stone-700 rounded" href="admin">
+        <i class="bi bi-speedometer2 text-secondary"></i> Panel Admin
+    </NavLink>
+</nav>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

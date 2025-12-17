@@ -1,0 +1,288 @@
+/*
+ * Bootstrap Overrides para TruequeTextil
+ * Colores corporativos: Stone (neutrales) + Amber (acentos)
+ */
+
+:root {
+    /* Colores corporativos Bootstrap */
+    --bs-primary: #f59e0b;
+    --bs-primary-rgb: 245, 158, 11;
+    --bs-secondary: #78716c;
+    --bs-secondary-rgb: 120, 113, 108;
+    --bs-success: #18b07c;
+    --bs-success-rgb: 24, 176, 124;
+    --bs-info: #0ea5e9;
+    --bs-info-rgb: 14, 165, 233;
+    --bs-warning: #f59e0b;
+    --bs-warning-rgb: 245, 158, 11;
+    --bs-danger: #ef4444;
+    --bs-danger-rgb: 239, 68, 68;
+    --bs-light: #f5f5f4;
+    --bs-light-rgb: 245, 245, 244;
+    --bs-dark: #1c1917;
+    --bs-dark-rgb: 28, 25, 23;
+
+    /* Body defaults */
+    --bs-body-bg: #fafaf9;
+    --bs-body-color: #1c1917;
+    --bs-body-font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+    /* Link colors */
+    --bs-link-color: #f59e0b;
+    --bs-link-color-rgb: 245, 158, 11;
+    --bs-link-hover-color: #d97706;
+
+    /* Paleta Stone para compatibilidad */
+    --stone-50: #fafaf9;
+    --stone-100: #f5f5f4;
+    --stone-200: #e7e5e4;
+    --stone-300: #d6d3d1;
+    --stone-400: #a8a29e;
+    --stone-500: #78716c;
+    --stone-600: #57534e;
+    --stone-700: #44403c;
+    --stone-800: #292524;
+    --stone-900: #1c1917;
+
+    /* Paleta Amber para compatibilidad */
+    --amber-50: #fffbeb;
+    --amber-100: #fef3c7;
+    --amber-200: #fde68a;
+    --amber-300: #fcd34d;
+    --amber-400: #fbbf24;
+    --amber-500: #f59e0b;
+    --amber-600: #d97706;
+    --amber-700: #b45309;
+    --amber-800: #92400e;
+    --amber-900: #78350f;
+}
+
+/* ==========================================
+   BOTONES
+   ========================================== */
+
+/* Primary - Amber */
+.btn-primary {
+    --bs-btn-bg: var(--amber-500);
+    --bs-btn-border-color: var(--amber-500);
+    --bs-btn-hover-bg: var(--amber-600);
+    --bs-btn-hover-border-color: var(--amber-600);
+    --bs-btn-active-bg: var(--amber-700);
+    --bs-btn-active-border-color: var(--amber-700);
+    --bs-btn-disabled-bg: var(--amber-500);
+    --bs-btn-disabled-border-color: var(--amber-500);
+}
+
+/* Secondary - Stone */
+.btn-secondary {
+    --bs-btn-bg: var(--stone-200);
+    --bs-btn-border-color: var(--stone-200);
+    --bs-btn-color: var(--stone-800);
+    --bs-btn-hover-bg: var(--stone-300);
+    --bs-btn-hover-border-color: var(--stone-300);
+    --bs-btn-hover-color: var(--stone-900);
+    --bs-btn-active-bg: var(--stone-400);
+    --bs-btn-active-border-color: var(--stone-400);
+}
+
+/* Outline Primary */
+.btn-outline-primary {
+    --bs-btn-color: var(--amber-600);
+    --bs-btn-border-color: var(--amber-500);
+    --bs-btn-hover-bg: var(--amber-500);
+    --bs-btn-hover-border-color: var(--amber-500);
+    --bs-btn-active-bg: var(--amber-600);
+    --bs-btn-active-border-color: var(--amber-600);
+}
+
+/* Outline Secondary */
+.btn-outline-secondary {
+    --bs-btn-color: var(--stone-600);
+    --bs-btn-border-color: var(--stone-300);
+    --bs-btn-hover-bg: var(--stone-100);
+    --bs-btn-hover-border-color: var(--stone-400);
+    --bs-btn-hover-color: var(--stone-800);
+}
+
+/* ==========================================
+   FORMULARIOS
+   ========================================== */
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--amber-300);
+    box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.25);
+}
+
+.form-control,
+.form-select {
+    border-color: var(--stone-300);
+}
+
+.form-control::placeholder {
+    color: var(--stone-400);
+}
+
+.form-check-input:checked {
+    background-color: var(--amber-500);
+    border-color: var(--amber-500);
+}
+
+.form-check-input:focus {
+    border-color: var(--amber-300);
+    box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.25);
+}
+
+/* ==========================================
+   NAVEGACION
+   ========================================== */
+
+.navbar {
+    --bs-navbar-color: var(--stone-700);
+    --bs-navbar-hover-color: var(--amber-600);
+    --bs-navbar-active-color: var(--amber-600);
+}
+
+.nav-link {
+    color: var(--stone-700);
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    color: var(--amber-600);
+}
+
+.nav-link.active {
+    color: var(--amber-600);
+}
+
+/* ==========================================
+   CARDS
+   ========================================== */
+
+.card {
+    --bs-card-border-color: var(--stone-200);
+}
+
+/* ==========================================
+   BADGES
+   ========================================== */
+
+.badge.bg-primary {
+    background-color: var(--amber-500) !important;
+}
+
+.badge.bg-secondary {
+    background-color: var(--stone-500) !important;
+}
+
+/* ==========================================
+   ALERTS
+   ========================================== */
+
+.alert-primary {
+    --bs-alert-bg: var(--amber-50);
+    --bs-alert-border-color: var(--amber-200);
+    --bs-alert-color: var(--amber-800);
+}
+
+/* ==========================================
+   BACKGROUNDS CUSTOM
+   ========================================== */
+
+.bg-stone-50 { background-color: var(--stone-50) !important; }
+.bg-stone-100 { background-color: var(--stone-100) !important; }
+.bg-stone-200 { background-color: var(--stone-200) !important; }
+.bg-stone-800 { background-color: var(--stone-800) !important; }
+.bg-stone-900 { background-color: var(--stone-900) !important; }
+
+.bg-amber-50 { background-color: var(--amber-50) !important; }
+.bg-amber-100 { background-color: var(--amber-100) !important; }
+.bg-amber-500 { background-color: var(--amber-500) !important; }
+.bg-amber-600 { background-color: var(--amber-600) !important; }
+
+/* ==========================================
+   TEXT COLORS CUSTOM
+   ========================================== */
+
+.text-stone-500 { color: var(--stone-500) !important; }
+.text-stone-600 { color: var(--stone-600) !important; }
+.text-stone-700 { color: var(--stone-700) !important; }
+.text-stone-800 { color: var(--stone-800) !important; }
+.text-stone-900 { color: var(--stone-900) !important; }
+
+.text-amber-500 { color: var(--amber-500) !important; }
+.text-amber-600 { color: var(--amber-600) !important; }
+.text-amber-700 { color: var(--amber-700) !important; }
+
+/* ==========================================
+   BORDER COLORS CUSTOM
+   ========================================== */
+
+.border-stone-200 { border-color: var(--stone-200) !important; }
+.border-stone-300 { border-color: var(--stone-300) !important; }
+.border-amber-200 { border-color: var(--amber-200) !important; }
+.border-amber-300 { border-color: var(--amber-300) !important; }
+
+/* ==========================================
+   UTILIDADES ADICIONALES
+   ========================================== */
+
+/* Focus ring amber */
+.focus-ring-amber:focus {
+    box-shadow: 0 0 0 0.25rem rgba(245, 158, 11, 0.25);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-amber {
+    background: linear-gradient(135deg, var(--amber-500) 0%, var(--amber-600) 100%);
+}
+
+.bg-gradient-stone {
+    background: linear-gradient(135deg, var(--stone-100) 0%, var(--stone-200) 100%);
+}
+
+/* Hover effects */
+.hover-bg-stone-50:hover { background-color: var(--stone-50) !important; }
+.hover-bg-stone-100:hover { background-color: var(--stone-100) !important; }
+.hover-text-amber-600:hover { color: var(--amber-600) !important; }
+
+/* Transitions */
+.transition-colors {
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+/* ==========================================
+   BLAZOR SPECIFIC
+   ========================================== */
+
+.blazor-error-boundary {
+    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ni42MDYgNTIuMjY1OEwyNjcuMTc5IDUyLjg0NjdMMjkxLjA5MiA3Ny42MzA1QzI5MS40ODUgNzguMDI0OCAyOTEuNTk1IDc4LjYwNTkgMjkxLjM4OCA3OS4xMjcyIDI5MS4xODEgNzkuNjQ4NiAyOTAuNjkgODAgMjkwLjEzOCA4MEwyNzQuNzQ1IDgwTDI2NC43NDUgODAgMjY0LjcyNiA4MCAyNDkuMzMzIDgwQzI0OC4wOCA4MCAyNDcgNzguOTIxIDI0NyA3Ny42NjggMjQ3IDc2LjQxNSAyNDguMDggNzUuMzM2IDI0OS4zMzMgNzUuMzM2TDI2NC45MjYgNzUuMzM2TDI2NC4zNzUgNzUuMTcyMkMyNjMuOTU0IDc1LjA1NDkgMjYzLjU2ODQgNzQuODU1NyAyNjMuMjQyIDc0LjU4OThMMjQ4Ljg2NiA1Ny41NjE2QzI0Ni44MjEgNTUuMDYwOSAyNDkuMTg3IDUxIDI1Mi4zMzMgNTEgMjU0LjE0IDUxIDI1NS42MjMgNTIuNjE1NyAyNTUuNjIzIDU0LjU4OTUgMjU1LjYyMyA1NC44NjkxIDI1NS41ODMgNTUuMTQ5IDI1NS41MTYgNTUuNDE0MyAyNTUuMjU3IDU2LjQ5NzUgMjU0LjkwOCA1Ny40ODg1IDI1NC41MTQgNTguMzg3IiB0cmFuc2Zvcm09Im1hdHJpeCgtMSAtOC43NDIyOGUtMDggLTguNzQyMjhlLTA4IDEgNTI2IC0xLjEzNjg2ZS0wNikiIGZpbGw9IiNGRkU1MDAiLz48cGF0aCBkPSJNMjYzLjUwNiA1MUMyNjQuNzE3IDUxIDI2NS44MTMgNTEuNDgzNyAyNjYuNjA2IDUyLjI2NThMMjY2LjYwNiA1Mi4yNjU4TDI2Ny4xNzkgNTIuODQ2N0wyOTEuMDkyIDc3LjYzMDVDMjkxLjQ4NSA3OC4wMjQ4IDI5MS41OTUgNzguNjA1OSAyOTEuMzg4IDc5LjEyNzIgMjkxLjE4MSA3OS42NDg2IDI5MC42OSA4MCAyOTAuMTM4IDgwTDI3NC43NDUgODBMMjY0Ljc0NSA4MCAyNjQuNzI2IDgwIDI0OS4zMzMgODBDMjQ4LjA4IDgwIDI0NyA3OC45MjEgMjQ3IDc3LjY2OCAyNDcgNzYuNDE1IDI0OC4wOCA3NS4zMzYgMjQ5LjMzMyA3NS4zMzZMMjY0LjkyNiA3NS4zMzZMMjY0LjM3NSA3NS4xNzIyQzI2My45NTQgNzUuMDU0OSAyNjMuNTY4NCA3NC44NTU3IDI2My4yNDIgNzQuNTg5OEwyNDguODY2IDU3LjU2MTZDMjQ2LjgyMSA1NS4wNjA5IDI0OS4xODcgNTEgMjUyLjMzMyA1MSAyNTQuMTQgNTEgMjU1LjYyMyA1Mi42MTU3IDI1NS42MjMgNTQuNTg5NSAyNTUuNjIzIDU0Ljg2OTEgMjU1LjU4MyA1NS4xNDkgMjU1LjUxNiA1NS40MTQzIDI1NS4yNTcgNTYuNDk3NSAyNTQuOTA4IDU3LjQ4ODUgMjU0LjUxNCA1OC4zODciIGZpbGw9IiNGRkU1MDAiLz48cGF0aCBkPSJNMjYzLjA4IDY0LjQ1OTVDMjYzLjU1MSA2NC4xMzU4IDI2NC4xMDUgNjQgMjY0LjY2NiA2NCAyNjUuMjI3IDY0IDI2NS43ODEgNjQuMTM1OCAyNjYuMjUyIDY0LjQ1OTUgMjY2LjcyMyA2NC43ODMxIDI2Ny4wNjIgNjUuMjUzNSAyNjcuMjE2IDY1Ljc5NDQgMjY3LjM2OSA2Ni4zMzUzIDI2Ny4zMjkgNjYuOTEzMyAyNjcuMDk5IDY3LjQzMjkgMjY2Ljg3IDY3Ljk1MjUgMjY2LjQ2NCA2OC4zODY5IDI2NS45MzcgNjguNjY2OCAyNjUuNDE1IDY4Ljk0MzggMjY0LjgxMSA2OS4wNTI5IDI2NC4yMTUgNjguOTc5NSAyNjMuNjE4IDY4LjkwNiAyNjMuMDY5IDY4LjY1NDQgMjYyLjY0NCA2OC4yNjE1TDI2Mi42NDQgNjguMjYxNUMyNjIuMjE5IDY3Ljg2ODUgMjYxLjkzNSA2Ny4zNTA5IDI2MS44MzkgNjYuNzc5NiAyNjEuNzQ0IDY2LjIwODIgMjYxLjg0MyA2NS42MTQzIDI2Mi4xMiA2NS4wOTYyIDI2Mi4zOTggNjQuNTc4IDI2Mi44MzkgNjQuMTYxNiAyNjMuMzcyIDYzLjkwMjMgMjYzLjkwNSA2My42NDMgMjY0LjUwNCA2My41NTUzIDI2NS4wODEgNjMuNjQ2NyAyNjUuNjY1IDYzLjcyNDQgMjY2LjIxIDYzLjk4NjQgMjY2LjY0NCA2NC4zOTc4IDI2Ny4wNzkgNjQuODA5MiAyNjcuMzgyIDY1LjM0OCAyNjcuNTEyIDY1Ljk0IDI2Ny42MzcgNjYuNTE3MiAyNjcuNTczIDY3LjEwNzUgMjY3LjMyOSA2Ny42MzYyIDI2Ny4wODYgNjguMTY0OCAyNjYuNjc3IDY4LjYxMDkgMjY2LjE1MiA2OC45MTkgMjY1LjYyNyA2OS4yMjcxIDI2NS4wMjEgNjkuMzgzNiAyNjQuNDA4IDY5LjM2NzYgMjYzLjc5NSA2OS4zNTE3IDI2My4yIDY5LjE2MzkgMjYyLjY5NiA2OC44Mjg2IDI2Mi4xOTEgNjguNDkzMyAyNjEuODA1IDY4LjAyMjMgMjYxLjU4OCA2Ny40NjgxIDI2MS4zNzEgNjYuOTEzOSAyNjEuMzM0IDY2LjMwMzEgMjYxLjQ4MiA2NS43MTkyIDI2MS42MyA2NS4xMzUzIDI2MS45NTQgNjQuNjExOCAyNjIuNDA5IDY0LjIwODMgMjYyLjg2NCA2My44MDQ5IDI2My40MjMgNjMuNTQxNCAyNjQuMDIzIDYzLjQ1MTkgMjY0LjYyMyA2My4zNjI1IDI2NS4yMzIgNjMuNDUwMyAyNjUuNzggNjMuNzAxOSAyNjYuMzI5IDYzLjk1MzUgMjY2Ljc5NiA2NC4zNTc3IDI2Ny4xMzIgNjQuODcwNiAyNjcuNDY5IDY1LjM4MzYgMjY3LjY2MiA2NS45ODc0IDI2Ny42ODkgNjYuNjEyIDI2Ny43MTYgNjcuMjM2NiAyNjcuNTc2IDY3Ljg1NzYgMjY3LjI4NCA2OC40MDE4TDI2Ny4yODQgNjguNDAxOEMyNjYuOTkzIDY4Ljk0NiAyNjYuNTYxIDY5LjM5NTUgMjY2LjAzOCA2OS42OTggMjY1LjUxNSA3MC4wMDA2IDI2NC45MTkgNzAuMTQzOSAyNjQuMzE4IDcwLjExMTggMjYzLjcxNyA3MC4wNzk3IDI2My4xMzkgNjkuODczNiAyNjIuNjUgNjkuNTE1NiAyNjIuMTYxIDY5LjE1NzUgMjYxLjc3OCA2OC42NjE0IDI2MS41NDkgNjguMDg5NiAyNjEuMzIgNjcuNTE3NyAyNjEuMjU1IDY2Ljg5NjggMjYxLjM2MiA2Ni4yOTQ0IDI2MS40NjkgNjUuNjkyMSAyNjEuNzQzIDY1LjEzMjEgMjYyLjE1IDY0LjY3NTQgMjYyLjU1OCA2NC4yMTg3IDI2My4wOCA2My44NzY3IDI2My42NjEgNjMuNjk2OCAyNjQuMjQzIDYzLjUxNjkgMjY0Ljg2MiA2My41MDYzIDI2NS40NTYgNjMuNjY2NCAyNjYuMDUgNjMuODI2NiAyNjYuNTkyIDY0LjE1MzcgMjY3LjAxOCA2NC42MTYzTDI2Ny4wMTggNjQuNjE2M0MyNjcuNDQ0IDY1LjA3ODkgMjY3LjczNyA2NS42NTg2IDI2Ny44NjIgNjYuMjg0MSAyNjcuOTg3IDY2LjkwOTYgMjY3LjkzOCA2Ny41NTgxIDI2Ny43MjIgNjguMTU0MSAyNjcuNTA1IDY4Ljc1MDIgMjY3LjEzIDY5LjI3MTYgMjY2LjYzOCA2OS42NTU0TDI2Ni42MzggNjkuNjU1NEMyNjYuMTQ3IDcwLjAzOTIgMjY1LjU1OSA3MC4yNzAzIDI2NC45NDUgNzAuMzIwOCAyNjQuMzMxIDcwLjM3MTIgMjYzLjcxNSA3MC4yMzkzIDI2My4xNzMgNjkuOTQwNCAyNjIuNjMgNjkuNjQxNCAyNjIuMTgyIDY5LjE4NzYgMjYxLjg4IDY4LjYzNjkgMjYxLjU3OCA2OC4wODYyIDI2MS40MzQgNjcuNDYxOCAyNjEuNDY0IDY2LjgzMDQgMjYxLjQ5NSA2Ni4xOTkgMjYxLjY5OCA2NS41ODQ0IDI2Mi4wNTEgNjUuMDYzNiAyNjIuNDA0IDY0LjU0MjggMjYyLjg5NiA2NC4xMzM0IDI2My40NjggNjMuODgwMyAyNjQuMDM5IDYzLjYyNzIgMjY0LjY2OSA2My41NDA3IDI2NS4yOTQgNjMuNjMwOCAyNjUuOTE4IDYzLjcyMDkgMjY2LjUwNCA2My45ODM2IDI2Ni45ODkgNjQuMzkwNCAyNjcuNDc0IDY0Ljc5NzEgMjY3Ljg0IDY1LjMzMzQgMjY4LjA0MyA2NS45NDA2TDI2OC4wNDMgNjUuOTQwNkMyNjguMjQ2IDY2LjU0NzggMjY4LjI3NiA2Ny4yMDM1IDI2OC4xMyA2Ny44Mjg2IDI2Ny45ODQgNjguNDUzOCAyNjcuNjY3IDY5LjAyMzUgMjY3LjIxOSA2OS40NzcxIDI2Ni43NzIgNjkuOTMwOCAyNjYuMjE0IDcwLjI1MTQgMjY1LjYwMiA3MC40MDQzIDI2NC45ODkgNzAuNTU3MiAyNjQuMzQ3IDcwLjUzNjEgMjYzLjc0NyA3MC4zNDM2IDI2My4xNDcgNzAuMTUxMiAyNjIuNjExIDY5Ljc5NDggMjYyLjE5NiA2OS4zMTEyIDI2MS43ODIgNjguODI3NiAyNjEuNTA1IDY4LjIzNTQgMjYxLjM5NiA2Ny42MDQ0IDI2MS4yODcgNjYuOTczNCAyNjEuMzUgNjYuMzIyMyAyNjEuNTc3IDY1LjcyMTUgMjYxLjgwNCA2NS4xMjA4IDI2Mi4xODggNjQuNTkyIDI2Mi42OTIgNjQuMTkxOCAyNjMuMTk2IDYzLjc5MTcgMjYzLjgwMSA2My41MzYxIDI2NC40MzkgNjMuNDU2MSAyNjUuMDc4IDYzLjM3NjEgMjY1LjcyMSA2My40NzQ4IDI2Ni4yOTQgNjMuNzQxIDI2Ni44NjcgNjQuMDA3MiAyNjcuMzQ5IDY0LjQzIDI2Ny42ODcgNjQuOTYyOCAyNjguMDI1IDY1LjQ5NTcgMjY4LjIwNyA2Ni4xMTU0IDI2OC4yMDggNjYuNzUxNkwyNjguMjA4IDY2Ljc1MTZDMjY4LjIwOSA2Ny4zODc4IDI2OC4wMjkgNjguMDA4MiAyNjcuNjkzIDY4LjU0MjEgMjY3LjM1NyA2OS4wNzYgMjY2Ljg3NyA2OS40OTk4IDI2Ni4zMDQgNjkuNzY3OCAyNjUuNzMyIDcwLjAzNTkgMjY1LjA5IDcwLjEzNjcgMjY0LjQ1IDcwLjA1OSAyNjMuODEgNjkuOTgxNCAyNjMuMjA1IDY5LjcyODQgMjYyLjcgNjkuMzI5NCIgZmlsbD0iI0ZGRTUwMCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, var(--bs-danger);
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+.blazor-error-boundary::after {
+    content: "Ha ocurrido un error.";
+}
+
+/* Valid/invalid state colors */
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid var(--bs-success);
+}
+
+.invalid {
+    outline: 1px solid var(--bs-danger);
+}
+
+.validation-message {
+    color: var(--bs-danger);
+}
+
+/* ==========================================
+   SPINNER/LOADING
+   ========================================== */
+
+.spinner-border.text-primary {
+    color: var(--amber-500) !important;
+}
