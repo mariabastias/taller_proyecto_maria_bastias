@@ -1,0 +1,230 @@
+@page "/completar-perfil"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.CompletarPerfil.Interfaces
+@using TruequeTextil.Shared.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
+
+<div class="min-vh-100 bg-stone-50 d-flex align-items-center justify-content-center p-4">
+    <div class="w-100" style="max-width: 600px;">
+        <div class="bg-white rounded-4 shadow p-4 p-md-5 pt-md-4">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="bg-amber-100 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                    <i class="bi bi-person-circle text-amber-600" style="font-size: 32px;"></i>
+                </div>
+                <h1 class="fs-3 fw-bold text-stone-900 mb-2">Completa tu perfil</h1>
+                <p class="text-stone-600 mb-0">Agrega una foto y una biografía para que otros usuarios te conozcan</p>
+            </div>
+
+            <!-- Progress -->
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-stone-600">Progreso del perfil</span>
+                    <span class="small text-stone-600">@progresoPerfil%</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-amber-500" role="progressbar" style="width: @progresoPerfil%"></div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <EditForm Model="@formModel" OnValidSubmit="Completar">
+                <DataAnnotationsValidator />
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger mb-3">
+                        @errorMessage
+                    </div>
+                }
+
+                <!-- Foto de perfil -->
+                <div class="mb-4">
+                    <label class="form-label fw-medium text-stone-700">Foto de perfil *</label>
+                    <div class="text-center">
+                        <div class="position-relative d-inline-block mb-3">
+                            <img src="@(string.IsNullOrEmpty(formModel.UrlFotoPerfil) ? "/images/default-avatar.png" : formModel.UrlFotoPerfil)"
+                                 class="rounded-circle border border-3 border-stone-200"
+                                 style="width: 120px; height: 120px; object-fit: cover;" />
+                            <button type="button" class="btn btn-sm bg-amber-600 position-absolute bottom-0 end-0 rounded-circle"
+                                    style="width: 32px; height: 32px;" @onclick="TriggerFileInput">
+                                <i class="bi bi-camera-fill text-white" style="font-size: 16px;"></i>
+                            </button>
+                        </div>
+                        <InputFile id="photoInput" class="d-none" OnChange="OnPhotoSelected" accept="image/*" />
+                        <p class="small text-stone-500">Haz clic en la cámara para cambiar tu foto</p>
+                        @if (!string.IsNullOrEmpty(uploadError))
+                        {
+                            <div class="text-danger small mt-2">@uploadError</div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Biografía -->
+                <div class="mb-4">
+                    <label for="biografia" class="form-label fw-medium text-stone-700">Biografía *</label>
+                    <textarea id="biografia" @bind="formModel.Biografia"
+                              class="form-control" rows="4"
+                              placeholder="Cuéntanos sobre ti, tus intereses en la moda, qué prendas buscas..."></textarea>
+                    <div class="form-text">
+                        Mínimo 10 caracteres. Comparte tu estilo y preferencias para conectar con otros usuarios.
+                    </div>
+                </div>
+
+                <!-- Botón -->
+                <button type="submit" class="btn btn-lg w-100 text-white fw-medium bg-amber-600"
+                        style="--bs-btn-hover-bg: var(--amber-700);"
+                        disabled="@isLoading">
+                    @if (isLoading)
+                    {
+                        <span class="d-flex align-items-center justify-content-center">
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                            Guardando...
+                        </span>
+                    }
+                    else
+                    {
+                        <span>Completar perfil</span>
+                    }
+                </button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private CompletarPerfilFormModel formModel = new();
+    private int progresoPerfil = 0;
+    private bool isLoading = false;
+    private string? errorMessage = null;
+    private string? uploadError = null;
+
+    private class CompletarPerfilFormModel
+    {
+        public string UrlFotoPerfil { get; set; } = "";
+        public string Biografia { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProgresoPerfil();
+    }
+
+    private async Task LoadProgresoPerfil()
+    {
+        var user = await CompletarPerfilService.GetCurrentUser();
+        if (user != null)
+        {
+            progresoPerfil = await CompletarPerfilService.ObtenerProgresoPerfil(user.UsuarioId);
+        }
+    }
+
+    private async Task Completar()
+    {
+        errorMessage = null;
+        isLoading = true;
+
+        try
+        {
+            var user = await CompletarPerfilService.GetCurrentUser();
+            if (user == null)
+            {
+                errorMessage = "Usuario no encontrado";
+                return;
+            }
+
+            var success = await CompletarPerfilService.CompletarPerfil(
+                user.UsuarioId,
+                formModel.UrlFotoPerfil,
+                formModel.Biografia);
+
+            if (success)
+            {
+                NavigationManager.NavigateTo("/explorar");
+            }
+            else
+            {
+                errorMessage = "Error al completar el perfil. Verifica que todos los campos estén correctos.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task TriggerFileInput()
+    {
+        await JSRuntime.InvokeVoidAsync("triggerFileInput", "photoInput");
+    }
+
+    private async Task OnPhotoSelected(InputFileChangeEventArgs e)
+    {
+        uploadError = null;
+        var file = e.File;
+        if (file == null) return;
+
+        // Validate
+        if (!file.ContentType.StartsWith("image/"))
+        {
+            uploadError = "Solo se permiten archivos de imagen.";
+            return;
+        }
+        if (file.Size > 5 * 1024 * 1024) // 5MB
+        {
+            uploadError = "El archivo es demasiado grande. Máximo 5MB.";
+            return;
+        }
+
+        // Get user
+        var user = await CompletarPerfilService.GetCurrentUser();
+        if (user == null)
+        {
+            uploadError = "Usuario no encontrado.";
+            return;
+        }
+
+        // Create folder
+        var uploadsPath = Path.Combine("wwwroot", "uploads", "profiles", user.UsuarioId.ToString());
+        Directory.CreateDirectory(uploadsPath);
+
+        // Generate filename
+        var extension = Path.GetExtension(file.Name);
+        var fileName = $"profile_{DateTime.Now:yyyyMMddHHmmss}{extension}";
+        var filePath = Path.Combine(uploadsPath, fileName);
+
+        // Save file
+        using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+        using var fileStream = new FileStream(filePath, FileMode.Create);
+        await stream.CopyToAsync(fileStream);
+
+        // Update model
+        formModel.UrlFotoPerfil = $"/uploads/profiles/{user.UsuarioId}/{fileName}";
+
+        // Trigger re-render
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "window.triggerFileInput = function(id) { document.getElementById(id).click(); }");
+        }
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private ICompletarPerfilService CompletarPerfilService { get; set; } = default!;
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}
