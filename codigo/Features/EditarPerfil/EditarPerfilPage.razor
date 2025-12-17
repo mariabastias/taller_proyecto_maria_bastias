@@ -1,0 +1,229 @@
+@page "/editar-perfil"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using TruequeTextil.Features.EditarPerfil.Interfaces
+@using TruequeTextil.Shared.Components
+@using TruequeTextil.Shared.Models
+
+<div class="min-vh-100 bg-stone-50 py-4">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-8">
+                <div class="bg-white rounded-4 shadow p-4 p-md-5 pt-md-4">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <div class="bg-amber-100 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                            <i class="bi bi-pencil-square text-amber-600" style="font-size: 32px;"></i>
+                        </div>
+                        <h1 class="fs-3 fw-bold text-stone-900 mb-2">Editar perfil</h1>
+                        <p class="text-stone-600 mb-0">Actualiza tu información personal</p>
+                    </div>
+
+                    @if (isLoading)
+                    {
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-amber-500" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    }
+                    else if (formModel != null)
+                    {
+                        <!-- Form -->
+                        <EditForm Model="@formModel" OnValidSubmit="Actualizar">
+                            <DataAnnotationsValidator />
+
+                            @if (!string.IsNullOrEmpty(successMessage))
+                            {
+                                <div class="alert alert-success mb-3">
+                                    @successMessage
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger mb-3">
+                                    @errorMessage
+                                </div>
+                            }
+
+                            <!-- Foto de perfil -->
+                            <div class="mb-4">
+                                <label class="form-label fw-medium text-stone-700">Foto de perfil</label>
+                                <div class="text-center">
+                                    <div class="position-relative d-inline-block mb-3">
+                                        <img src="@(string.IsNullOrEmpty(formModel.UrlFotoPerfil) ? "/images/default-avatar.png" : formModel.UrlFotoPerfil)"
+                                             class="rounded-circle border border-3 border-stone-200"
+                                             style="width: 120px; height: 120px; object-fit: cover;" />
+                                        <button type="button" class="btn btn-sm btn-primary position-absolute bottom-0 end-0 rounded-circle"
+                                                style="width: 32px; height: 32px;">
+                                            <i class="bi bi-camera-fill text-white" style="font-size: 16px;"></i>
+                                        </button>
+                                    </div>
+                                    <p class="small text-stone-500">Haz clic en la cámara para cambiar tu foto</p>
+                                </div>
+                            </div>
+
+                            <!-- Nombre y Apellido -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label for="nombre" class="form-label fw-medium text-stone-700">Nombre *</label>
+                                    <InputText id="nombre" @bind-Value="formModel.Nombre"
+                                               class="form-control form-control-lg"
+                                               placeholder="Tu nombre" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="apellido" class="form-label fw-medium text-stone-700">Apellido *</label>
+                                    <InputText id="apellido" @bind-Value="formModel.Apellido"
+                                               class="form-control form-control-lg"
+                                               placeholder="Tu apellido" />
+                                </div>
+                            </div>
+
+                            <!-- Región -->
+                            <div class="mb-3">
+                                <label for="region" class="form-label fw-medium text-stone-700">Región *</label>
+                                <RegionDropdown @bind-SelectedRegionId="selectedRegionId" class="w-100" />
+                            </div>
+
+                            <!-- Comuna -->
+                            <div class="mb-3">
+                                <label for="comuna" class="form-label fw-medium text-stone-700">Comuna *</label>
+                                <ComunaDropdown SelectedRegionId="selectedRegionId" @bind-SelectedComunaId="formModel.ComunaId" class="w-100" />
+                            </div>
+
+                            <!-- Biografía -->
+                            <div class="mb-4">
+                                <label for="biografia" class="form-label fw-medium text-stone-700">Biografía</label>
+                                <textarea id="biografia" @bind="formModel.Biografia"
+                                          class="form-control" rows="4"
+                                          placeholder="Cuéntanos sobre ti, tus intereses en la moda..."></textarea>
+                                <div class="form-text">
+                                    Máximo 500 caracteres. @((formModel.Biografia?.Length ?? 0)/500*100)%
+                                </div>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="d-flex gap-3">
+                                <button type="submit" class="btn btn-lg flex-fill text-white fw-medium bg-amber-600"
+                                        style="--bs-btn-hover-bg: var(--amber-700);"
+                                        disabled="@isSubmitting">
+                                    @if (isSubmitting)
+                                    {
+                                        <span class="d-flex align-items-center justify-content-center">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            Guardando...
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>Guardar cambios</span>
+                                    }
+                                </button>
+                                <button type="button" @onclick="Cancelar" class="btn btn-outline-secondary btn-lg">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private EditarPerfilDto? formModel;
+    private int selectedRegionId = 0;
+    private bool isLoading = true;
+    private bool isSubmitting = false;
+    private string? errorMessage = null;
+    private string? successMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserData();
+    }
+
+    private async Task LoadUserData()
+    {
+        try
+        {
+            var user = await EditarPerfilService.GetCurrentUser();
+            if (user != null)
+            {
+                formModel = new EditarPerfilDto
+                {
+                    Nombre = user.Nombre,
+                    Apellido = user.Apellido,
+                    ComunaId = user.ComunaId,
+                    UrlFotoPerfil = user.UrlFotoPerfil ?? "",
+                    Biografia = user.Biografia ?? ""
+                };
+
+                // Cargar región basada en comuna
+                if (user.Comuna != null)
+                {
+                    selectedRegionId = user.Comuna.RegionId;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al cargar datos: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task Actualizar()
+    {
+        errorMessage = null;
+        successMessage = null;
+        isSubmitting = true;
+
+        try
+        {
+            var user = await EditarPerfilService.GetCurrentUser();
+            if (user == null)
+            {
+                errorMessage = "Usuario no encontrado";
+                return;
+            }
+
+            var (success, message) = await EditarPerfilService.ActualizarPerfil(user.UsuarioId, formModel!);
+
+            if (success)
+            {
+                successMessage = message;
+                // Recargar datos para mostrar cambios
+                await LoadUserData();
+            }
+            else
+            {
+                errorMessage = message;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error al actualizar: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancelar()
+    {
+        NavigationManager.NavigateTo("/perfil-publico");
+    }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+    [Inject]
+    private IEditarPerfilService EditarPerfilService { get; set; } = default!;
+}
