@@ -79,16 +79,16 @@ Taller de Proyecto de Especialidad, del Instituto AIEP
 ## Licencia
 Este proyecto está bajo la Licencia MIT - ver archivo [LICENSE](LICENSE) para detalles.
 
-## Informe Final
-[Descargar desde Google Drive](https://drive.google.com/file/d/1jO-GDikkHLFxWWQA6gMMDNr2hmXUfn9R/view?usp=sharing)
-*Nota: El PDF está alojado en Google Drive para garantizar su correcta visualización*
+## Informe Detallado
+[Descargar desde Google Drive](https://drive.google.com/file/d/1ffHtDpQdV1WJnnw-Rgt3rLC5xRZPcuFX/view?usp=sharing)
+*Nota: El PDF está alojado en Google Drive para garantizar su correcta visualización. Igualmente, se encuentra disponible en la carpeta "Documentos"*
 
 ---
 
-### Nota Final
+### In Memorian
 
 Este proyecto está dedicado a la memoria de **Aaron Swartz**,  
-como reconocimiento a su visión de la tecnología  
-al servicio de la sociedad, el acceso al conocimiento  
+como reconocimiento a su visión de la tecnología  al servicio de la sociedad, 
+el acceso al conocimiento  
 y la construcción de sistemas con impacto social.
 
