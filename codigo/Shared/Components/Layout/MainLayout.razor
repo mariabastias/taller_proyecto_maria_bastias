@@ -98,7 +98,7 @@
 									}
 									<span class="d-none d-lg-inline">@(userName ?? "Usuario")</span>
 								</a>
-								<ul class="dropdown-menu dropdown-menu-end shadow-sm">
+								<ul class="dropdown-menu dropdown-menu-end shadow-sm" style="z-index:9999">
 									<li class="px-3 py-2">
 										<div class="fw-semibold">@userFullName</div>
 										<small class="text-muted">@userEmail</small>
@@ -161,7 +161,7 @@
 		NavigationManager
 			.ToBaseRelativePath(NavigationManager.Uri)
 			.Trim('/')
-			.ToLowerInvariant() is not ("onboarding");
+			.ToLowerInvariant() is not ("onboarding" or "" or "login" or "registro");
 
 
 	protected override async Task OnInitializedAsync()

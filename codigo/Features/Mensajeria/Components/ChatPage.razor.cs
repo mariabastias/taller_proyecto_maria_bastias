@@ -236,7 +236,7 @@ public partial class ChatPage : IAsyncDisposable
             3 => "bg-danger bg-opacity-10 text-danger",
             4 => "bg-amber-100 text-amber-800",
             5 => "bg-secondary bg-opacity-10 text-secondary",
-            6 => "bg-primary bg-opacity-10 text-primary",
+            6 => "bg-primary bg-opacity-10 text-white",
             7 => "bg-secondary bg-opacity-10 text-secondary",
             _ => "bg-secondary bg-opacity-10 text-secondary"
         };
